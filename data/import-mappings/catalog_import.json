@@ -1,0 +1,195 @@
+{
+  "$comment": "Universal category mapping configuration with 20+ precision keywords per category for B2B scientific equipment, reagents, and consumables.",
+  "defaults": {
+    "supplier": "UNIVERSAL",
+    "importSource": "catalog_import.csv"
+  },
+  "columns": {
+    "sku": ["sku", "catalogue number", "catalog number", "item code", "part number"],
+    "name": ["name", "title", "product name", "product"],
+    "manufacturer": ["company", "company name", "brand", "manufacturer"],
+    "supplier": ["supplier", "vendor"],
+    "category": ["category"],
+    "subcategory": ["subcategory", "sub category"],
+    "shortDescription": ["short_description", "short description", "summary"],
+    "description": ["feature", "description", "full description", "details"],
+    "specifications": ["specifications", "specs", "technical specifications"],
+    "imageUrl": ["image", "image_url", "image url", "picture"],
+    "datasheetUrl": ["datasheet_url", "datasheet", "datasheet url"],
+    "sourceUrl": ["source_url", "source url", "url", "link"],
+    "price": ["price"],
+    "availability": ["availability", "stock"],
+    "originCountry": ["origin_country", "country of origin", "origin"],
+    "keywords": ["keywords", "tags"]
+  },
+  "ignoredColumns": [
+    "supply"
+  ],
+  "categoryRules": [
+    {
+      "category": "Diagnostic Test Kits",
+      "match": [
+        "test kit", "assay kit", "rapid test", "colloidal gold", "antigen",
+        "antibody", " ab ", "elisa kit", "diagnostic kit", "reagent kit",
+        "lateral flow", "strip test", "ivd", "in vitro diagnostic", "test strip",
+        "bioassay", "serology", "immunoturbidimetry", "pathogen test", "clinical kit"
+      ]
+    },
+    {
+      "category": "Chemicals, Reagents & Standards",
+      "match": [
+        "chemical", "reagent", "standard", "buffer", "solvent",
+        "peptide", "protein", "enzyme", "stain", "dye",
+        "acid", "base", "salt", "solution", "substrate",
+        "reference material", "chromatography reagent", "pure chemical", "biochemical", "synthesis"
+      ]
+    },
+    {
+      "category": "Laboratory Consumables & Plasticware",
+      "match": [
+        "pipette tip", "microtube", "centrifuge tube", "petri dish", "serological pipette",
+        "culture plate", "deep well plate", "syringe filter", "sample vial", "cryovial",
+        "embedding cassette", "inoculating loop", "culture flask", "weighing boat", "transfer pipette",
+        "consumable", "plasticware", "filter paper", "sample cup", "cuvette"
+      ]
+    },
+    {
+      "category": "Glassware",
+      "match": [
+        "beaker", "erlenmeyer", "volumetric flask", "graduated cylinder", "burette",
+        "glass bottle", "reagent bottle", "glass tube", "watch glass", "funnel",
+        "desiccator", "condenser", "soxhlet", "glassware", "borosilicate",
+        "petri dish glass", "kjeldahl flask", "distillation flask", "glass rod", "separatory funnel"
+      ]
+    },
+    {
+      "category": "Analytical Instruments",
+      "match": [
+        "analyzer", "analyser", "spectrophotometer", "chromatograph", "titrator",
+        "polarimeter", "meter", "tester", "balance", "kjeldahl",
+        "refractometer", "detector", "spectrometer", "viscometer", "colorimeter",
+        "counter", "digester", "sampler", "imaging", "desorption",
+        "purge and trap", "hplc", "gc-ms", "mass spec", "ph meter"
+      ]
+    },
+    {
+      "category": "Molecular Biology & PCR",
+      "match": [
+        "pcr", "nucleic", "extraction", "fluorescence", "thermal cycler",
+        "electrophoresis", "elisa", "microplate", "gene", "sequenc",
+        "immunoassay", "blot", "gel imaging", "cell culture", "blood culture",
+        "qpcr", "dna", "rna", "primer", "oligo",
+        "transfection", "cloning", "microarray", "sequencing", "zymography"
+      ]
+    },
+    {
+      "category": "Biosafety & Clean Air",
+      "match": [
+        "biological safety", "biosafety", "laminar", "fume hood", "safety cabinet",
+        "cleanroom", "clean bench", "workstation", "air shower", "hood",
+        "pass box", "bsc", "class ii", "downflow booth", "isolator",
+        "exhaust hood", "clean booth", "air purifier", "hepa filter unit", "biosafety cabinet"
+      ]
+    },
+    {
+      "category": "Freezers & Refrigerators",
+      "match": [
+        "freezer", "refrigerator", "cryo", "ultra-low", "ultra low",
+        "cold storage", "-86", "-150", "blood bank refrigerator", "pharmacy refrigerator",
+        "ice maker", "liquid nitrogen", "dewar", "cold room", "cryogenic",
+        "plasma freezer", "chest freezer", "upright freezer", "refrigerated", "frost free"
+      ]
+    },
+    {
+      "category": "Incubators, Ovens & Baths",
+      "match": [
+        "incubator", "oven", "bath", "dryer", "drying",
+        "furnace", "climate", "chamber", "hotplate", "hot plate",
+        "heating", "thermostatic", "muffle", "water bath", "co2 incubator",
+        "shaking incubator", "hybridization oven", "dessicator oven", "paraffin dispenser", "thermal block"
+      ]
+    },
+    {
+      "category": "Centrifuges",
+      "match": [
+        "centrifuge", "centrfuge", "microcentrifuge", "ultracentrifuge", "minicentrifuge",
+        "benchtop centrifuge", "floor standing centrifuge", "refrigerated centrifuge", "plate centrifuge", "cytocentrifuge",
+        "hematocrit centrifuge", "blood centrifuge", "speed centrifuge", "rotors", "centrifuge adapter",
+        "spin down", "high speed centrifuge", "low speed centrifuge", "prp centrifuge", "centrifugation"
+      ]
+    },
+    {
+      "category": "Microscopes & Pathology",
+      "match": [
+        "microscope", "microtome", "tissue", "histology", "slide",
+        "stainer", "embedding center", "cryostat", "stereo microscope", "inverted microscope",
+        "fluorescence microscope", "pathology", "cover glass", "microscope camera", "slide scanner",
+        "cytology", "confocal", "polarizing microscope", "metallurgical microscope", "pathological"
+      ]
+    },
+    {
+      "category": "Sterilization & Autoclaves",
+      "match": [
+        "autoclave", "sterilizer", "sterilization", "disinfect", "steam sterilizer",
+        "ethylene oxide", "plasma sterilizer", "uv sterilizer", "dry heat sterilizer", "autoclave bag",
+        "biological indicator", "chemical indicator", "sterilization pouch", "washers", "washer disinfector",
+        "ultrasonic cleaner", "biohazard disposal", "decontamination", "autoclave tape", "retort"
+      ]
+    },
+    {
+      "category": "Water Purification",
+      "match": [
+        "water purif", "water purification", "water softener", "water treatment", "wastewater",
+        "ultrapure", "distiller", "water system", "water generator", "deionizer",
+        "reverse osmosis", "ro system", "edi system", "water polisher", "pure water",
+        "lab water", "water cartridge", "water filter", "feed water", "water still"
+      ]
+    },
+    {
+      "category": "Mixing, Shaking & Stirring",
+      "match": [
+        "shaker", "stirrer", "mixer", "vortex", "homogenizer",
+        "shaking", "rocker", "magnetic stirrer", "overhead stirrer", "roller",
+        "rotator", "incubator shaker", "orbital shaker", "tissue lyser", "ball mill",
+        "grinder", "disruptor", "sonicator", "paddle stirrer", "plate shaker"
+      ]
+    },
+    {
+      "category": "Liquid Handling & Pumps",
+      "match": [
+        "pump", "pipette", "dispenser", "dilutor", "liquid handler",
+        "sample processing", "capping", "sealer", "sealing", "peristaltic pump",
+        "vacuum pump", "syringe pump", "diaphragm pump", "electronic pipette", "multichannel pipette",
+        "bottle top dispenser", "burette digital", "pipette controller", "liquid dispensing", "tubing pump"
+      ]
+    },
+    {
+      "category": "Medical & Hospital Equipment",
+      "match": [
+        "hospital", "medical", "wheelchair", "dental", "bed",
+        "therapy", "chair", "stretcher", "patient", "aed",
+        "crutch", "surgical", "monitor", "defibrillator", "infusion pump",
+        "ecg", "ultrasound", "otoscope", "stethoscope", "clinic equipment"
+      ]
+    },
+    {
+      "category": "Safety & Personal Protective Equipment (PPE)",
+      "match": [
+        "gloves", "lab coat", "safety glasses", "goggles", "face shield",
+        "respirator", "mask", "apron", "shoe covers", "hair net",
+        "spill kit", "eyewash", "safety shower", "biohazard bag", "sharps container",
+        "fire blanket", "gas detector", "radiation badge", "ppe", "safety cabinet storage"
+      ]
+    },
+    {
+      "category": "Animal Research Equipment",
+      "match": [
+        "animal", "cage", "rodent", "vivarium", "ventilated cage",
+        "ivc", "bedding", "animal feed", "water bottle animal", "exercise wheel",
+        "behavioral testing", "maze", "stereotaxic", "animal anesthesia", "surgical instrument animal",
+        "ear tag", "animal identification", "metabolic cage", "telemetry", "animal restrainer"
+      ]
+    }
+  ],
+  "defaultCategory": "General Laboratory Equipment"
+}

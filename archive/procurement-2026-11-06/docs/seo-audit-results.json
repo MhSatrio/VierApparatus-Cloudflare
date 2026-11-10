@@ -1,0 +1,80 @@
+{
+ "measuredAt": "2026-10-28T07:31:19.669Z",
+ "tool": "scripts/seo-audit.mjs",
+ "before": {
+  "label": "before",
+  "crawledPages": 11195,
+  "sitemapUrls": 10311,
+  "distinctContactQueryUrlsLinked": 10295,
+  "orphanPages_noIncomingLinks": 0,
+  "sitemapPages_unreachableFromHome": 0,
+  "maxClickDepth": 4,
+  "sitemapPagesDeeperThan3Clicks": 4,
+  "sitemapPagesDeeperThan10Clicks": 0,
+  "issueCounts": {
+   "description.duplicate": 2488,
+   "description.too-long": 7226,
+   "description.too-short": 3115,
+   "product.missing-brand": 8828,
+   "product.needs-offers-review-or-rating": 10295,
+   "product.placeholder-image": 2183,
+   "title.too-long": 9851
+  }
+ },
+ "after": {
+  "label": "after",
+  "crawledPages": 11200,
+  "sitemapUrls": 10750,
+  "distinctContactQueryUrlsLinked": 10295,
+  "orphanPages_noIncomingLinks": 0,
+  "sitemapPages_unreachableFromHome": 8,
+  "maxClickDepth": 6,
+  "sitemapPagesDeeperThan3Clicks": 178,
+  "sitemapPagesDeeperThan10Clicks": 0,
+  "issueCounts": {
+   "description.duplicate": 34,
+   "product.missing-brand": 8828,
+   "product.missing-image": 2183,
+   "product.needs-offers-review-or-rating": 10295,
+   "title.duplicate": 1193
+  }
+ },
+ "before_strict": {
+  "label": "before-strict",
+  "crawledPages": 10715,
+  "sitemapUrls": 10311,
+  "distinctContactQueryUrlsLinked": 9368,
+  "orphanPages_noIncomingLinks": 927,
+  "sitemapPages_unreachableFromHome": 987,
+  "maxClickDepth": 93,
+  "sitemapPagesDeeperThan3Clicks": 8792,
+  "sitemapPagesDeeperThan10Clicks": 5687,
+  "issueCounts": {
+   "description.duplicate": 2488,
+   "description.too-long": 6746,
+   "description.too-short": 3115,
+   "product.missing-brand": 8828,
+   "product.needs-offers-review-or-rating": 10295,
+   "product.placeholder-image": 2183,
+   "title.too-long": 9851
+  }
+ },
+ "after_strict": {
+  "label": "after-strict",
+  "crawledPages": 11179,
+  "sitemapUrls": 10750,
+  "distinctContactQueryUrlsLinked": 10295,
+  "orphanPages_noIncomingLinks": 0,
+  "sitemapPages_unreachableFromHome": 0,
+  "maxClickDepth": 7,
+  "sitemapPagesDeeperThan3Clicks": 7919,
+  "sitemapPagesDeeperThan10Clicks": 0,
+  "issueCounts": {
+   "description.duplicate": 34,
+   "product.missing-brand": 8828,
+   "product.missing-image": 2183,
+   "product.needs-offers-review-or-rating": 10295,
+   "title.duplicate": 1193
+  }
+ }
+}

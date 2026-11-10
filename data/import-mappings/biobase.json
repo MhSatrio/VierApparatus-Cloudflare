@@ -1,0 +1,288 @@
+{
+  "$comment": "Maps supplier CSV headers to the internal product schema. Header matching is case-insensitive and trims whitespace. Each field lists accepted header aliases (first match wins). Edit this file, not source code, when a supplier uses different headers.",
+  "defaults": {
+    "supplier": "BIOBASE",
+    "manufacturer": "BIOBASE",
+    "importSource": "biobasenew.csv"
+  },
+  "columns": {
+    "sku": [
+      "sku",
+      "catalogue number",
+      "catalog number",
+      "item code",
+      "part number"
+    ],
+    "name": [
+      "name",
+      "title",
+      "product name",
+      "product"
+    ],
+    "manufacturer": [
+      "company",
+      "company name",
+      "brand",
+      "manufacturer"
+    ],
+    "supplier": [
+      "supplier",
+      "vendor"
+    ],
+    "category": [
+      "category"
+    ],
+    "subcategory": [
+      "subcategory",
+      "sub category"
+    ],
+    "shortDescription": [
+      "short_description",
+      "short description",
+      "summary"
+    ],
+    "description": [
+      "feature",
+      "description",
+      "full description",
+      "details"
+    ],
+    "specifications": [
+      "specifications",
+      "specs",
+      "technical specifications"
+    ],
+    "imageUrl": [
+      "image",
+      "image_url",
+      "image url",
+      "picture"
+    ],
+    "datasheetUrl": [
+      "datasheet_url",
+      "datasheet",
+      "datasheet url"
+    ],
+    "sourceUrl": [
+      "source_url",
+      "source url",
+      "url",
+      "link"
+    ],
+    "price": [
+      "price"
+    ],
+    "availability": [
+      "availability",
+      "stock"
+    ],
+    "originCountry": [
+      "origin_country",
+      "country of origin",
+      "origin"
+    ],
+    "keywords": [
+      "keywords",
+      "tags"
+    ]
+  },
+  "ignoredColumns": [
+    "supply"
+  ],
+  "categoryRules": [
+    {
+      "category": "Diagnostic Test Kits",
+      "match": [
+        "test kit",
+        "assay kit",
+        "rapid test",
+        "colloidal gold",
+        "antigen",
+        "antibody",
+        " ab "
+      ]
+    },
+    {
+      "category": "Animal Research Equipment",
+      "match": [
+        "animal",
+        "cage"
+      ]
+    },
+    {
+      "category": "Centrifuges",
+      "match": [
+        "centrifuge",
+        "centrfuge"
+      ]
+    },
+    {
+      "category": "Microscopes & Pathology",
+      "match": [
+        "microscope",
+        "microtome",
+        "tissue",
+        "histology",
+        "slide"
+      ]
+    },
+    {
+      "category": "Biosafety & Clean Air",
+      "match": [
+        "biological safety",
+        "biosafety",
+        "laminar",
+        "fume hood",
+        "safety cabinet",
+        "cleanroom",
+        "clean bench",
+        "workstation",
+        "air shower",
+        "hood",
+        "pass box"
+      ]
+    },
+    {
+      "category": "Freezers & Refrigerators",
+      "match": [
+        "freezer",
+        "refrigerator",
+        "cryo",
+        "ultra-low",
+        "ultra low",
+        "cold storage",
+        "-86"
+      ]
+    },
+    {
+      "category": "Sterilization & Autoclaves",
+      "match": [
+        "autoclave",
+        "sterilizer",
+        "sterilization",
+        "disinfect"
+      ]
+    },
+    {
+      "category": "Incubators, Ovens & Baths",
+      "match": [
+        "incubator",
+        "oven",
+        "bath",
+        "dryer",
+        "drying",
+        "furnace",
+        "climate",
+        "chamber",
+        "hotplate",
+        "hot plate",
+        "heating",
+        "thermostatic",
+        "muffle"
+      ]
+    },
+    {
+      "category": "Water Purification",
+      "match": [
+        "water purif",
+        "water purification",
+        "water softener",
+        "water treatment",
+        "wastewater",
+        "ultrapure",
+        "distiller",
+        "water system",
+        "water generator"
+      ]
+    },
+    {
+      "category": "Molecular Biology & PCR",
+      "match": [
+        "pcr",
+        "nucleic",
+        "extraction",
+        "fluorescence",
+        "thermal cycler",
+        "electrophoresis",
+        "elisa",
+        "microplate",
+        "gene",
+        "sequenc",
+        "immunoassay",
+        "blot",
+        "gel imaging",
+        "cell culture",
+        "blood culture"
+      ]
+    },
+    {
+      "category": "Analytical Instruments",
+      "match": [
+        "analyzer",
+        "analyser",
+        "spectrophotometer",
+        "chromatograph",
+        "titrator",
+        "polarimeter",
+        "meter",
+        "tester",
+        "balance",
+        "kjeldahl",
+        "refractometer",
+        "detector",
+        "spectrometer",
+        "viscometer",
+        "colorimeter",
+        "counter",
+        "digester",
+        "sampler",
+        "imaging",
+        "desorption",
+        "purge and trap"
+      ]
+    },
+    {
+      "category": "Mixing, Shaking & Stirring",
+      "match": [
+        "shaker",
+        "stirrer",
+        "mixer",
+        "vortex",
+        "homogenizer",
+        "shaking",
+        "rocker"
+      ]
+    },
+    {
+      "category": "Liquid Handling & Pumps",
+      "match": [
+        "pump",
+        "pipette",
+        "dispenser",
+        "dilutor",
+        "liquid handler",
+        "sample processing",
+        "capping",
+        "sealer",
+        "sealing"
+      ]
+    },
+    {
+      "category": "Medical & Hospital Equipment",
+      "match": [
+        "hospital",
+        "medical",
+        "wheelchair",
+        "dental",
+        "bed",
+        "therapy",
+        "chair",
+        "stretcher",
+        "patient",
+        "aed",
+        "crutch"
+      ]
+    }
+  ],
+  "defaultCategory": "General Laboratory Equipment"
+}
