@@ -1,0 +1,38 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# Cloudflare / OpenNext build output and local state
+/.open-next/
+/.wrangler/
+cloudflare-env.d.ts
+
+# env files (never commit secrets). Local Cloudflare preview reads .dev.vars; keep it out of Git too.
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# vercel (only relevant if this folder is ever linked to Vercel)
+.vercel
+
+# misc
+.DS_Store
+*.tsbuildinfo
+npm-debug.log*
+coverage/
+.tmp/
+
+# importer temp/backup files
+data/*.tmp
+data/*.bak
+data/products.json.bak
+
+# local development database (never commit)
+.data/

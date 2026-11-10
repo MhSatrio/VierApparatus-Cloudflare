@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Worker name. Appears in the default URL https://vierapparatus-cloudflare.<your-subdomain>.workers.dev
+  "name": "vierapparatus-cloudflare",
+  // custom-worker.ts wraps the generated .open-next/worker.js with the edge HTML cache.
+  "main": "custom-worker.ts",
+  // Must be 2024-09-23 or later for nodejs_compat (required by Next.js on Workers).
+  "compatibility_date": "2026-10-28",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Gives the Worker a per-deployment id, used in the edge-cache key so a new deploy never serves old HTML.
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
+  "observability": { "enabled": true }
+
+  // IMAGES (R2). To store uploaded images in your R2 bucket from the Worker with no keys at all, replace the bucket name below with
+  // the real one (Cloudflare dashboard > R2 > your bucket), remove the two slashes in front of the block, and deploy. The bucket must be
+  // reachable on the image domain (R2 > the bucket > Settings > Custom Domains > image.vierapparatus.com). Without this block the app
+  // uses the S3 keys from the environment if present, and otherwise keeps images in the database.
+  //
+  // ,"r2_buckets": [{ "binding": "IMAGES", "bucket_name": "REPLACE-WITH-YOUR-BUCKET-NAME" }]
+}

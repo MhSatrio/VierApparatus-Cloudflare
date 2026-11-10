@@ -1,0 +1,4 @@
+sku,title,brand,supplier,category,subcategory,short_description,description,specifications,image_url,datasheet_url,source_url,price,availability,origin_country,keywords
+EX-0001,"Example Benchtop Centrifuge (SYNTHETIC SAMPLE)",ExampleBrand,Example Supplier,Centrifuges,Benchtop,"Synthetic sample row, not a real product.","Line one of a multiline description.
+Line two, with a comma, and ""quoted"" text.","Speed: 4000 rpm; Capacity: 6 x 50 mL",https://example.com/image.jpg,,,,,,"centrifuge, sample"
+EX-0002,"Example Water Bath (SYNTHETIC SAMPLE)",,,,,,,,,,,,,,

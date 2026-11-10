@@ -1,0 +1,23 @@
+# Copy to .dev.vars for `npm run preview` (the local Cloudflare runtime). Placeholders only; never commit real values.
+# In production these are Worker secrets (`npx wrangler secret put NAME`) or `vars`, not this file. See README-CLOUDFLARE.md.
+
+# Non-secret
+NEXT_PUBLIC_SITE_URL=http://localhost:8787
+INQUIRY_TO_EMAIL=info@vierapparatus.com
+INQUIRY_FROM_EMAIL="VierApparatus Website <noreply@vierapparatus.com>"
+
+# Secrets (must be the SAME values as on Vercel and as used by `npm run admin:bootstrap`)
+TURSO_DATABASE_URL=libsql://your-database-your-org.turso.io
+TURSO_AUTH_TOKEN=
+AUTH_SECRET=
+RESEND_API_KEY=
+# Images: leave these empty to keep images in the database while testing. To test against the real R2 bucket, fill the four R2_ values
+# (an R2 API token with Object Read & Write). In production on Cloudflare the bucket is bound as IMAGES instead (see wrangler.jsonc).
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=
+IMAGE_PUBLIC_BASE_URL=https://image.vierapparatus.com
+# Optional: shared rate limiting
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=

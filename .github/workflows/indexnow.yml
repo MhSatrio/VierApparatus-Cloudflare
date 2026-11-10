@@ -1,0 +1,27 @@
+name: IndexNow (manual catch-up)
+# Publishing, updating, unpublishing or deleting an article in the admin area notifies IndexNow automatically (on the real
+# domain), so no deployment hook is needed any more. This workflow is only for a manual bulk/catch-up submission.
+# Needs the repository secrets TURSO_DATABASE_URL and TURSO_AUTH_TOKEN (read-only use) and the AUTH_SECRET is NOT needed.
+on:
+  workflow_dispatch:
+    inputs:
+      args:
+        description: "Arguments for scripts/indexnow.ts (e.g. --since-last, --recent-days 7 or --all)"
+        required: false
+        default: "--since-last"
+
+jobs:
+  indexnow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Submit changed URLs
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: npm run indexnow -- ${{ github.event.inputs.args }}
