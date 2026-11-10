@@ -36,3 +36,7 @@ data/products.json.bak
 
 # local development database (never commit)
 .data/
+
+# Word documentation: kept on the PC only, never in Git
+*.docx
+*.doc

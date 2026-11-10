@@ -13,12 +13,9 @@
   },
   // Gives the Worker a per-deployment id, used in the edge-cache key so a new deploy never serves old HTML.
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
-  "observability": { "enabled": true }
-
-  // IMAGES (R2). To store uploaded images in your R2 bucket from the Worker with no keys at all, replace the bucket name below with
-  // the real one (Cloudflare dashboard > R2 > your bucket), remove the two slashes in front of the block, and deploy. The bucket must be
-  // reachable on the image domain (R2 > the bucket > Settings > Custom Domains > image.vierapparatus.com). Without this block the app
-  // uses the S3 keys from the environment if present, and otherwise keeps images in the database.
-  //
-  // ,"r2_buckets": [{ "binding": "IMAGES", "bucket_name": "REPLACE-WITH-YOUR-BUCKET-NAME" }]
+  "observability": { "enabled": true },
+  // IMAGES: uploaded article, module, product and sponsor pictures are stored in this R2 bucket from the Worker, with no keys needed.
+  // Public links are IMAGE_PUBLIC_BASE_URL + the object key. The bucket is served on images.vierapparatus.com (R2 > bucket > Custom Domains).
+  "r2_buckets": [{ "binding": "IMAGES", "bucket_name": "vier-product-images" }],
+  "vars": { "IMAGE_PUBLIC_BASE_URL": "https://images.vierapparatus.com" }
 }
