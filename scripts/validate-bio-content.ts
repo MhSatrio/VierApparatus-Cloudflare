@@ -372,6 +372,8 @@ const VERIFIED_DOIS = new Set([
   "10.1146/annurev.genet.34.1.499", // Gott & Emeson (2000)
   "10.1038/nrm3525", // Kornblihtt et al. (2013)
   "10.1016/j.molcel.2007.11.019", // Hunter (2007)
+  // Biochemistry, foundations, Atoms and Chemical Bonds (Crossref-verified 2026-11-12)
+  "10.1021/bi00866a011", // Good et al. (1966)
 ]);
 
 type Issue = { file: string; msg: string };
