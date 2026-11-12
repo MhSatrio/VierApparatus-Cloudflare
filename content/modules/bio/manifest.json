@@ -23299,7 +23299,7 @@
         "imageStatus": "No Image Yet"
       },
       "topicsInCurriculum": 196,
-      "topicsStarted": 3,
+      "topicsStarted": 4,
       "levels": [
         {
           "slug": "foundations",
@@ -23527,10 +23527,75 @@
             {
               "topic": "Functional Groups",
               "folder": "content/modules/bio/biochemistry/foundations/functional-groups",
-              "status": "not_started",
-              "overviewWords": 0,
-              "chapterCount": 0,
-              "chapters": []
+              "status": "drafted_needs_review",
+              "overviewWords": 610,
+              "chapterCount": 8,
+              "chapters": [
+                {
+                  "title": "What Is a Functional Group?",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/01-what-is-a-functional-group.md",
+                  "words": 637,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Hydroxyl Groups",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/02-hydroxyl-groups.md",
+                  "words": 622,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Carbonyl Groups",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/03-carbonyl-groups.md",
+                  "words": 628,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Carboxyl Groups",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/04-carboxyl-groups.md",
+                  "words": 616,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Amino Groups",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/05-amino-groups.md",
+                  "words": 631,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Phosphate Groups",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/06-phosphate-groups.md",
+                  "words": 615,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Sulfhydryl Groups",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/07-sulfhydryl-groups.md",
+                  "words": 614,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Functional Groups in Drug Design",
+                  "file": "content/modules/bio/biochemistry/foundations/functional-groups/chapters/08-functional-groups-in-drug-design.md",
+                  "words": 629,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                }
+              ]
             },
             {
               "topic": "Stereochemistry Basics",
