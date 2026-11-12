@@ -23299,7 +23299,7 @@
         "imageStatus": "No Image Yet"
       },
       "topicsInCurriculum": 196,
-      "topicsStarted": 5,
+      "topicsStarted": 6,
       "levels": [
         {
           "slug": "foundations",
@@ -23673,10 +23673,75 @@
             {
               "topic": "Biological Buffers",
               "folder": "content/modules/bio/biochemistry/foundations/biological-buffers",
-              "status": "not_started",
-              "overviewWords": 0,
-              "chapterCount": 0,
-              "chapters": []
+              "status": "drafted_needs_review",
+              "overviewWords": 632,
+              "chapterCount": 8,
+              "chapters": [
+                {
+                  "title": "What a Buffer Does",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/01-what-a-buffer-does.md",
+                  "words": 620,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "The Buffer Range",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/02-the-buffer-range.md",
+                  "words": 643,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Preparing a Buffer",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/03-preparing-a-buffer.md",
+                  "words": 628,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Choosing a Buffer",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/04-choosing-a-buffer.md",
+                  "words": 617,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Phosphate and Bicarbonate Buffers",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/05-phosphate-and-bicarbonate-buffers.md",
+                  "words": 630,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Buffer Capacity",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/06-buffer-capacity.md",
+                  "words": 624,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Temperature and Buffer Behavior",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/07-temperature-and-buffer-behavior.md",
+                  "words": 613,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Buffers in Laboratory Practice",
+                  "file": "content/modules/bio/biochemistry/foundations/biological-buffers/chapters/08-buffers-in-laboratory-practice.md",
+                  "words": 621,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                }
+              ]
             },
             {
               "topic": "Free Energy Basics",

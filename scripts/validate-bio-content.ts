@@ -377,6 +377,9 @@ const VERIFIED_DOIS = new Set([
   // Biochemistry, foundations, Acids, Bases and pH; Stereochemistry (Crossref-verified 2026-11-12)
   "10.1021/ed078p1499", // Po & Senozan (2001)
   "10.1002/anie.196603851", // Cahn, Ingold & Prelog (1966)
+  // Biochemistry, foundations, Free Energy Basics (Crossref-verified 2026-11-12)
+  "10.1021/bi00036a001", // Frey & Arabshahi (1995)
+  "10.1016/0003-9861(71)90338-9", // Shikama (1971)
 ]);
 
 type Issue = { file: string; msg: string };
