@@ -23299,7 +23299,7 @@
         "imageStatus": "No Image Yet"
       },
       "topicsInCurriculum": 196,
-      "topicsStarted": 1,
+      "topicsStarted": 2,
       "levels": [
         {
           "slug": "foundations",
@@ -23381,10 +23381,75 @@
             {
               "topic": "Water as a Solvent",
               "folder": "content/modules/bio/biochemistry/foundations/water-as-a-solvent",
-              "status": "not_started",
-              "overviewWords": 0,
-              "chapterCount": 0,
-              "chapters": []
+              "status": "drafted_needs_review",
+              "overviewWords": 608,
+              "chapterCount": 8,
+              "chapters": [
+                {
+                  "title": "The Structure of Water",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/01-the-structure-of-water.md",
+                  "words": 623,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Hydrogen Bonding in Water",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/02-hydrogen-bonding-in-water.md",
+                  "words": 604,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Water as a Polar Solvent",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/03-water-as-a-polar-solvent.md",
+                  "words": 651,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Dissolving Ions in Water",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/04-dissolving-ions-in-water.md",
+                  "words": 619,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Hydration Shells",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/05-hydration-shells.md",
+                  "words": 643,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "The Hydrophobic Effect",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/06-the-hydrophobic-effect.md",
+                  "words": 610,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Water and Temperature",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/07-water-and-temperature.md",
+                  "words": 622,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Water in the Cell",
+                  "file": "content/modules/bio/biochemistry/foundations/water-as-a-solvent/chapters/08-water-in-the-cell.md",
+                  "words": 632,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                }
+              ]
             },
             {
               "topic": "Acids, Bases and pH",
