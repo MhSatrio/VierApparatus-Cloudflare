@@ -23299,7 +23299,7 @@
         "imageStatus": "No Image Yet"
       },
       "topicsInCurriculum": 196,
-      "topicsStarted": 2,
+      "topicsStarted": 3,
       "levels": [
         {
           "slug": "foundations",
@@ -23454,10 +23454,75 @@
             {
               "topic": "Acids, Bases and pH",
               "folder": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph",
-              "status": "not_started",
-              "overviewWords": 0,
-              "chapterCount": 0,
-              "chapters": []
+              "status": "drafted_needs_review",
+              "overviewWords": 619,
+              "chapterCount": 8,
+              "chapters": [
+                {
+                  "title": "What Is an Acid and a Base?",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/01-what-is-an-acid-and-a-base.md",
+                  "words": 605,
+                  "citations": 3,
+                  "references": 4,
+                  "ok": true
+                },
+                {
+                  "title": "The pH Scale",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/02-the-ph-scale.md",
+                  "words": 606,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Water Ionization and the Ion Product of Water",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/03-water-ionization-and-kw.md",
+                  "words": 629,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Weak Acids and pKa",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/04-weak-acids-and-pka.md",
+                  "words": 638,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "The Henderson-Hasselbalch Equation",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/05-the-henderson-hasselbalch-equation.md",
+                  "words": 627,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Titration Curves",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/06-titration-curves.md",
+                  "words": 626,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Acid-Base Balance in the Body",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/07-acid-base-balance-in-the-body.md",
+                  "words": 623,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Measuring pH in the Laboratory",
+                  "file": "content/modules/bio/biochemistry/foundations/acids-bases-and-ph/chapters/08-measuring-ph-in-the-lab.md",
+                  "words": 636,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                }
+              ]
             },
             {
               "topic": "Functional Groups",

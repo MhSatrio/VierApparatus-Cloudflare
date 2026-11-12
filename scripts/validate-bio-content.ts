@@ -374,6 +374,9 @@ const VERIFIED_DOIS = new Set([
   "10.1016/j.molcel.2007.11.019", // Hunter (2007)
   // Biochemistry, foundations, Atoms and Chemical Bonds (Crossref-verified 2026-11-12)
   "10.1021/bi00866a011", // Good et al. (1966)
+  // Biochemistry, foundations, Acids, Bases and pH; Stereochemistry (Crossref-verified 2026-11-12)
+  "10.1021/ed078p1499", // Po & Senozan (2001)
+  "10.1002/anie.196603851", // Cahn, Ingold & Prelog (1966)
 ]);
 
 type Issue = { file: string; msg: string };
