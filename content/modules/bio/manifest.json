@@ -23299,7 +23299,7 @@
         "imageStatus": "No Image Yet"
       },
       "topicsInCurriculum": 196,
-      "topicsStarted": 4,
+      "topicsStarted": 5,
       "levels": [
         {
           "slug": "foundations",
@@ -23600,10 +23600,75 @@
             {
               "topic": "Stereochemistry Basics",
               "folder": "content/modules/bio/biochemistry/foundations/stereochemistry-basics",
-              "status": "not_started",
-              "overviewWords": 0,
-              "chapterCount": 0,
-              "chapters": []
+              "status": "drafted_needs_review",
+              "overviewWords": 643,
+              "chapterCount": 8,
+              "chapters": [
+                {
+                  "title": "Why Shape Matters",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/01-why-shape-matters.md",
+                  "words": 642,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "The Chiral Center",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/02-the-chiral-center.md",
+                  "words": 630,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Enantiomers",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/03-enantiomers.md",
+                  "words": 639,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "R and S Configuration",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/04-r-and-s-configuration.md",
+                  "words": 630,
+                  "citations": 4,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Diastereomers and Meso Compounds",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/05-diastereomers-and-meso-compounds.md",
+                  "words": 610,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Optical Activity",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/06-optical-activity.md",
+                  "words": 620,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Stereochemistry of Sugars and Amino Acids",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/07-stereochemistry-of-sugars-and-amino-acids.md",
+                  "words": 615,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Stereochemistry and Biological Recognition",
+                  "file": "content/modules/bio/biochemistry/foundations/stereochemistry-basics/chapters/08-stereochemistry-and-biological-recognition.md",
+                  "words": 637,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                }
+              ]
             },
             {
               "topic": "Biological Buffers",
