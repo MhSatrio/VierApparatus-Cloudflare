@@ -23291,7 +23291,7 @@
     {
       "slug": "biochemistry",
       "name": "Biochemistry",
-      "status": "structure_only",
+      "status": "in_progress",
       "rules": {
         "minChaptersPerTopic": 8,
         "minWordsPerChapter": 600,
@@ -23299,7 +23299,7 @@
         "imageStatus": "No Image Yet"
       },
       "topicsInCurriculum": 196,
-      "topicsStarted": 0,
+      "topicsStarted": 1,
       "levels": [
         {
           "slug": "foundations",
@@ -23308,10 +23308,75 @@
             {
               "topic": "Atoms and Chemical Bonds",
               "folder": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds",
-              "status": "not_started",
-              "overviewWords": 0,
-              "chapterCount": 0,
-              "chapters": []
+              "status": "drafted_needs_review",
+              "overviewWords": 636,
+              "chapterCount": 8,
+              "chapters": [
+                {
+                  "title": "What Is an Atom?",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/01-what-is-an-atom.md",
+                  "words": 622,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Protons, Neutrons and Electrons",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/02-protons-neutrons-electrons.md",
+                  "words": 685,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Electron Shells and Valence",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/03-electron-shells-and-valence.md",
+                  "words": 669,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Covalent Bonds",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/04-covalent-bonds.md",
+                  "words": 700,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Ionic Bonds and Ions",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/05-ionic-bonds-and-ions.md",
+                  "words": 611,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Hydrogen Bonds and Weak Interactions",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/06-hydrogen-bonds-and-weak-interactions.md",
+                  "words": 664,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Polar and Nonpolar Molecules",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/07-polar-and-nonpolar-molecules.md",
+                  "words": 664,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                },
+                {
+                  "title": "Bonds in Living Systems",
+                  "file": "content/modules/bio/biochemistry/foundations/atoms-and-chemical-bonds/chapters/08-bonds-in-living-systems.md",
+                  "words": 650,
+                  "citations": 3,
+                  "references": 3,
+                  "ok": true
+                }
+              ]
             },
             {
               "topic": "Water as a Solvent",
