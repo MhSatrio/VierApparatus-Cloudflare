@@ -6,7 +6,7 @@ import { CommentForm } from "@/components/products/CommentForm";
 import { ProductCard, Stars } from "@/components/products/ProductCard";
 import { SafeImage } from "@/components/SafeImage";
 import { productDescription, productJsonLd, productTitle } from "@/lib/products/seo";
-import { MIN_RATINGS_FOR_SCORE, productHref, REVIEW_STATUS_LABEL, type GalleryImage, type ProductRecord } from "@/lib/products/shared";
+import { isIndexableProduct, MIN_RATINGS_FOR_SCORE, productHref, REVIEW_STATUS_LABEL, type GalleryImage, type ProductRecord } from "@/lib/products/shared";
 import { site } from "@/lib/site";
 import { listApprovedComments, ratingFor } from "@/lib/store/product-comments";
 import { findProductRedirect, getPublishedProduct, getRelatedProducts } from "@/lib/store/products";
@@ -22,6 +22,8 @@ export async function generateMetadata({ params }: Ctx): Promise<Metadata> {
     title: { absolute: productTitle(p) },
     description: productDescription(p),
     alternates: { canonical: productHref(p.slug) },
+    // Unreviewed products stay readable but are kept out of search results until the editorial review is finished.
+    robots: isIndexableProduct(p) ? { index: true, follow: true } : { index: false, follow: true },
     openGraph: { type: "website", title: p.name, description: productDescription(p), url: `${site.url}${productHref(p.slug)}`, ...(p.imageUrl && p.imageUrl.startsWith("https://") ? { images: [{ url: p.imageUrl }] } : {}) },
   };
 }

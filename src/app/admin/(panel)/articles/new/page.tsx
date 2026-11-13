@@ -24,6 +24,8 @@ export default async function NewArticlePage({ searchParams }: { searchParams: P
         source="editor"
         publishedAt={null}
         minWords={minWords}
+        references={[]}
+        refcheck={{ status: "not_checked", current: false, checkedAt: null, items: [] }}
         owner={can(user, "articles.manage")}
         initialTab={tab === "markdown" ? "markdown" : "visual"}
         categories={categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))}

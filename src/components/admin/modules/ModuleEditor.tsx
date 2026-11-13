@@ -18,12 +18,15 @@ import { BlockEditor } from "../editor/BlockEditor";
 import { BLOCK_LABEL, BLOCK_ORDER, isPlaceholderImage, newBlock } from "../editor/inline";
 import { MediaPicker, type PickedImage } from "../editor/MediaPicker";
 import { Card } from "../ui";
+import { RefCheckPanel, type RefcheckView } from "../refcheck/RefCheckPanel";
 
 type Item = { key: string; block: Block };
 let counter = 0;
 const keyOf = () => `mb${Date.now().toString(36)}${(counter++).toString(36)}`;
 const toItems = (blocks: Block[]): Item[] => blocks.map((block) => ({ key: keyOf(), block }));
 const lines = (t: string) => t.split("\n").map((x) => x.trim()).filter(Boolean);
+// the same comparison the server makes when it fingerprints a list (text and DOI, trimmed)
+const refKey = (rs: Reference[]) => JSON.stringify(rs.map((r) => [r.text.trim(), r.doi.trim()]));
 // The reference list has its own panel (APA text and DOI), so the body does not offer a second "references" block.
 const BODY_BLOCKS = BLOCK_ORDER.filter((t) => t !== "references");
 
@@ -45,6 +48,9 @@ export function ModuleEditor({ module: m, canWrite, locked, owner, taskHref, cha
   const [objectives, setObjectives] = useState(m.objectives.join("\n"));
   const [prereq, setPrereq] = useState(m.prerequisites.join("\n"));
   const [refs, setRefs] = useState<Reference[]>(m.references.length ? m.references : []);
+  const [refcheck, setRefcheck] = useState<RefcheckView>({ status: m.refcheckStatus, current: m.refcheckCurrent, checkedAt: m.refcheckAt, items: m.refcheckReport });
+  // the list the last recorded check covered; the check still applies only while the list on screen matches it
+  const [checkedKey, setCheckedKey] = useState<string | null>(m.refcheckCurrent ? refKey(m.references) : null);
   const [contentStatus, setContentStatus] = useState<ContentStatus>(m.contentStatus);
   const [items, setItems] = useState<Item[]>(() => toItems(m.doc.blocks.length ? m.doc.blocks : [newBlock("paragraph")]));
   const [version, setVersion] = useState(m.version);
@@ -80,10 +86,22 @@ export function ModuleEditor({ module: m, canWrite, locked, owner, taskHref, cha
   const objectiveLines = lines(objectives);
   const doiProblem = (r: Reference) => !!r.doi.trim() && !normalizeDoi(r.doi);
   const refProblem = refs.some(doiProblem);
+  const refsCurrent = checkedKey !== null && refKey(refs) === checkedKey;
+  const refcheckShown: RefcheckView = { ...refcheck, current: refsCurrent };
+  const refsPass = refcheck.status === "pass" && refsCurrent;
+  // a check saves the list it read, so the editor takes the stored list back, and the check then covers it
+  function onRefcheck(next: RefcheckView, saved?: Reference[]) {
+    setRefcheck(next);
+    if (saved) {
+      setRefs(saved);
+      setCheckedKey(refKey(saved));
+    }
+  }
   const checklist = [
     { ok: words >= MIN_PUBLISH_WORDS, text: `Body of at least ${MIN_PUBLISH_WORDS} words (now ${words})` },
     { ok: objectiveLines.length > 0, text: "At least one learning objective" },
     { ok: refs.filter((r) => r.text.trim()).length > 0 && !refProblem, text: "At least one reference, with valid DOIs" },
+    { ok: refsPass, text: "Every reference is green in the reference check (References card)" },
     { ok: contentStatus === "final", text: 'Content status is "Final" (after scientific review)' },
   ];
 
@@ -364,6 +382,9 @@ export function ModuleEditor({ module: m, canWrite, locked, owner, taskHref, cha
             <p className="mb-4 text-sm text-ink/70">
               Genuine, verifiable sources only, in APA 7th edition. Add the DOI whenever the source has one; it becomes a link. Never invent a citation, a DOI or a finding.
             </p>
+            <div className="mb-4">
+              <RefCheckPanel entity="module" id={m.id} value={refcheckShown} initialText={refs.filter((r) => r.text.trim()).map((r) => r.text).join("\n\n")} onChange={onRefcheck} disabled={!editable} />
+            </div>
             <ol className="space-y-4">
               {refs.map((r, i) => (
                 <li key={i} className="grid gap-2 rounded-lg border border-ink/15 p-3 md:grid-cols-[1fr_16rem]">

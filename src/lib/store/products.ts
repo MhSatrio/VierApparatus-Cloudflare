@@ -10,6 +10,7 @@ import {
 import { duplicateKey, parseImportRecord, parseProductRef, type ImportRecord, type ImportSummary, type RowReport } from "../products/import";
 import type { Viewer } from "./planner";
 import { audit, json, likePattern, n, nowIso, s, sn, type Row } from "./util";
+import { connectorProductPublished, connectorProductReviewed } from "../connector/hooks";
 
 /**
  * The product catalogue: products, their categories, the publication workflow, bulk changes, imports, and the texts of the public
@@ -254,7 +255,8 @@ export async function getRelatedProducts(p: Pick<ProductRecord, "id" | "category
 
 export async function listProductSitemap(): Promise<{ slug: string; updatedAt: string }[]> {
   const db = await conn();
-  return (await db.execute("SELECT slug, updated_at FROM products WHERE status = 'published' ORDER BY num")).rows.map((r) => ({ slug: s(r.slug), updatedAt: s(r.updated_at) }));
+  // Only reviewed products are indexable (see isIndexableProduct), so only they are listed for search engines.
+  return (await db.execute("SELECT slug, updated_at FROM products WHERE status = 'published' AND review_status = 'reviewed' ORDER BY num")).rows.map((r) => ({ slug: s(r.slug), updatedAt: s(r.updated_at) }));
 }
 
 // ---------------------------------------------------------------- writing
@@ -369,7 +371,9 @@ export async function updateProduct(actor: Viewer, id: string, input: ProductInp
   const res = await db.batch(stmts, "write");
   if (!res[0].rowsAffected) throw new ProductError("conflict", "This product was changed in the meantime. Reload to continue.");
   await audit(actor.id, "product.updated", `${id} ${d.name}`);
-  return (await getProduct(id))!;
+  const after = (await getProduct(id))!;
+  if (cur.reviewStatus !== "reviewed" && after.reviewStatus === "reviewed") await connectorProductReviewed(after);
+  return after;
 }
 
 /** Moves a product along the publication workflow. The move must be one the workflow allows; publishing also needs the minimum content. */
@@ -392,7 +396,9 @@ export async function setProductStatus(actor: Viewer, id: string, to: ProductSta
     args: [to, to, t, t, actor.id, id],
   });
   await audit(actor.id, `product.${to}`, `${id} ${cur.name}`);
-  return (await getProduct(id))!;
+  const after = (await getProduct(id))!;
+  if (to === "published") await connectorProductPublished(after);
+  return after;
 }
 
 /** Deletes a product for good, with its comments. Everything that is not a mistake should be archived instead. */

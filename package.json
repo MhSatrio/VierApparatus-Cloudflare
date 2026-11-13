@@ -17,6 +17,7 @@
     "admin:reset-password": "tsx --env-file-if-exists=.env.local --tsconfig scripts/tsconfig.json scripts/admin-reset-password.ts",
     "content:seed": "tsx --env-file-if-exists=.env.local --tsconfig scripts/tsconfig.json scripts/seed-content.ts",
     "modules:seed": "tsx --env-file-if-exists=.env.local --tsconfig scripts/tsconfig.json scripts/modules-seed.ts",
+    "bio:validate": "tsx --tsconfig scripts/tsconfig.json scripts/validate-bio-content.ts --write-manifest",
     "mock:turso": "node --no-warnings scripts/mock-turso.mjs",
     "test:web-client": "node scripts/test-web-client.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -24,7 +25,8 @@
     "cf:build": "opennextjs-cloudflare build",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "products:legacy": "tsx --env-file-if-exists=.env.local --tsconfig scripts/tsconfig.json scripts/products-legacy.ts",
-    "templates:build": "tsx --tsconfig scripts/tsconfig.json scripts/build-templates.ts"
+    "templates:build": "tsx --tsconfig scripts/tsconfig.json scripts/build-templates.ts",
+    "products:sync": "tsx --env-file-if-exists=.env.local --tsconfig scripts/tsconfig.json scripts/products-sync.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

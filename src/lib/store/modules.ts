@@ -8,12 +8,15 @@ import { docToText, readingMinutes, slugify, wordCount } from "../content/text";
 import {
   BIOLOGY_LEVELS, BIOLOGY_SPECIALIZATIONS, generalSpecialization, genericLevels, SUBJECTS,
 } from "../modules/curriculum";
+import { CURRICULUM_SPECIALIZATIONS, specializationLevels } from "../modules/curriculum-specializations";
 import {
   CONTENT_STATUSES, MIN_PUBLISH_WORDS, moduleHref, normalizeDoi, readableSequence, specHref,
   type ContentStatus, type Crumb, type LevelInfo, type NodeKind, type PublicationStatus, type Reference, type SpecializationInfo, type SubjectInfo, type SubjectTree, type TreeLevel, type TreeNode,
 } from "../modules/shared";
 import type { PlannerRecord } from "../planner-shared";
 import { createRecord, type Viewer } from "./planner";
+import { readRefcheck, refcheckGate, type RefcheckStatus, type StoredItem } from "./refcheck";
+import { refsHash } from "../refcheck/hash";
 import { logActivity } from "./activity";
 import { json, n, nowIso, s, sn, type Row } from "./util";
 
@@ -301,23 +304,51 @@ export type ModuleUrl = { path: string; kind: "index" | "subject" | "specializat
  * Every public address of the platform, for the sitemap. A lesson carries its own last-changed time; the index, subject and level
  * pages carry none (they change whenever any lesson does, and an invented date would make crawlers re-read everything daily).
  */
+/**
+ * Every public module address, for the sitemap. Everything is read in two round trips and the trees are built in memory. One query
+ * per specialization would exceed the request limit of a Cloudflare Worker (50 subrequests on the free plan) at 40 specializations.
+ */
 export async function listModuleUrls(): Promise<ModuleUrl[]> {
   const db = await conn();
   const out: ModuleUrl[] = [{ path: "/module", kind: "index", updatedAt: null }];
-  const subs = (await db.execute("SELECT route_slug FROM module_subjects WHERE parent_id IS NULL AND published = 1 AND archived = 0 ORDER BY sort")).rows;
-  const updated = new Map((await db.execute("SELECT id, updated_at FROM modules WHERE status = 'published' AND length(body_text) > 0")).rows.map((r) => [s(r.id), s(r.updated_at)]));
+  const subs = (await db.execute("SELECT * FROM module_subjects WHERE parent_id IS NULL AND published = 1 AND archived = 0 ORDER BY sort")).rows;
+  const [specRows, levelRows, nodeRows, linkRows, updatedRows] = await db.batch(
+    [
+      { sql: "SELECT * FROM module_subjects WHERE parent_id IS NOT NULL AND published = 1 AND archived = 0 ORDER BY sort, name", args: [] },
+      { sql: "SELECT * FROM module_levels ORDER BY sort, num", args: [] },
+      {
+        sql: `SELECT id, subject_id, level_id, parent_id, kind, slug, title, summary, sort, status, content_status, reading_minutes, (length(body_text) > 0) AS has_body
+              FROM modules WHERE status <> 'archived' ORDER BY sort, title`,
+        args: [],
+      },
+      {
+        sql: `SELECT k.id AS link_id, k.level_id AS level_id, m.id, m.parent_id, m.kind, m.slug, m.title, m.summary, k.sort, m.status, m.content_status, m.reading_minutes, (length(m.body_text) > 0) AS has_body,
+                     '/module/' || s.route_slug || '/' || sp.route_slug || '/' || l.slug || '/' || m.slug AS href
+              FROM module_links k JOIN modules m ON m.id = k.module_id JOIN module_levels l ON l.id = m.level_id
+              JOIN module_subjects sp ON sp.id = m.subject_id JOIN module_subjects s ON s.id = sp.parent_id
+              WHERE m.status <> 'archived' ORDER BY k.sort, m.title`,
+        args: [],
+      },
+      { sql: "SELECT id, updated_at FROM modules WHERE status = 'published' AND length(body_text) > 0", args: [] },
+    ],
+    "read",
+  );
+  const updated = new Map(updatedRows.rows.map((r) => [s(r.id), s(r.updated_at)]));
   for (const sub of subs) {
-    const group = await getSubjectWithSpecializations(s(sub.route_slug));
-    if (!group) continue;
-    out.push({ path: `/module/${group.subject.slug}`, kind: "subject", updatedAt: null });
-    for (const sp of group.specializations) {
-      out.push({ path: specHref(group.subject.slug, sp.slug), kind: "specialization", updatedAt: null });
-      const tree = await getSubjectTree(group.subject.slug, sp.slug);
-      if (!tree) continue;
+    const subject = toSubject(sub);
+    out.push({ path: `/module/${subject.slug}`, kind: "subject", updatedAt: null });
+    for (const sr of specRows.rows.filter((r) => s(r.parent_id) === subject.id)) {
+      const spec = toSpec(sr, subject.slug);
+      out.push({ path: specHref(subject.slug, spec.slug), kind: "specialization", updatedAt: null });
+      const levels = levelRows.rows.filter((r) => s(r.subject_id) === spec.id).map(toLevel);
+      const levelIds = new Set(levels.map((l) => l.id));
+      const nodes = nodeRows.rows.filter((r) => s(r.subject_id) === spec.id).map(toNodeRow);
+      const links = linkRows.rows.filter((r) => levelIds.has(s(r.level_id))).map(toLinkRow);
+      const tree = buildTree(subject, spec, levels, nodes, links);
       for (const level of tree.levels) {
         out.push({ path: moduleHref(tree.subject.slug, tree.spec.slug, level.slug), kind: "level", updatedAt: null });
-        const walk = (nodes: TreeNode[]) => {
-          for (const nd of nodes) {
+        const walk = (items: TreeNode[]) => {
+          for (const nd of items) {
             if (nd.linkHref) continue; // a shared module is listed at its own address
             if (nd.readable) out.push({ path: moduleHref(tree.subject.slug, tree.spec.slug, level.slug, nd.trail), kind: "module", updatedAt: updated.get(nd.id) ?? null });
             walk(nd.children);
@@ -411,34 +442,43 @@ export async function ensureCurriculum(owner: { id: string; name: string }): Pro
   }
   await flush();
 
-  // General Biology's disciplines and modules
+  // Disciplines and modules: General Biology (232) and each specialization that has a curriculum (196 each)
   const bioParent = subjectId.get("bio")!;
-  const generalBio = specId.get(`${bioParent}/general-biology`)!;
   const nodeKey = (lvl: string, parent: string | null, kind: string, slug: string) => `${lvl}|${parent ?? ""}|${kind}|${slug}`;
-  const existingNodes = new Map(
-    (await db.execute({ sql: "SELECT id, level_id, parent_id, kind, slug FROM modules WHERE subject_id = ?", args: [generalBio] })).rows.map((r) => [nodeKey(s(r.level_id), sn(r.parent_id), s(r.kind), s(r.slug)), s(r.id)]),
-  );
-  const insertNode = (lvl: string, parentId: string | null, kind: NodeKind, title: string, sort: number): string => {
-    const slug = slugify(title);
-    const key = nodeKey(lvl, parentId, kind, slug);
-    const have = existingNodes.get(key);
-    if (have) return have;
-    const id = newId("mo_");
-    existingNodes.set(key, id);
-    stmts.push({
-      sql: "INSERT INTO modules(id, subject_id, level_id, parent_id, kind, slug, title, sort, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      args: [id, generalBio, lvl, parentId, kind, slug, title, sort, t, t],
+  const curricula: { sid: string; levels: { slug: string; disciplines: { name: string; modules: string[] }[] }[] }[] = [
+    { sid: specId.get(`${bioParent}/general-biology`)!, levels: BIOLOGY_LEVELS },
+    ...CURRICULUM_SPECIALIZATIONS.map((slug) => {
+      const name = BIOLOGY_SPECIALIZATIONS.find((b) => b.slug === slug)?.name ?? slug;
+      return { sid: specId.get(`${bioParent}/${slug}`)!, levels: specializationLevels(slug, name) };
+    }),
+  ];
+  for (const cur of curricula) {
+    const subjectOfNodes = cur.sid;
+    const existingNodes = new Map(
+      (await db.execute({ sql: "SELECT id, level_id, parent_id, kind, slug FROM modules WHERE subject_id = ?", args: [subjectOfNodes] })).rows.map((r) => [nodeKey(s(r.level_id), sn(r.parent_id), s(r.kind), s(r.slug)), s(r.id)]),
+    );
+    const insertNode = (lvl: string, parentId: string | null, kind: NodeKind, title: string, sort: number): string => {
+      const slug = slugify(title);
+      const key = nodeKey(lvl, parentId, kind, slug);
+      const have = existingNodes.get(key);
+      if (have) return have;
+      const id = newId("mo_");
+      existingNodes.set(key, id);
+      stmts.push({
+        sql: "INSERT INTO modules(id, subject_id, level_id, parent_id, kind, slug, title, sort, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [id, subjectOfNodes, lvl, parentId, kind, slug, title, sort, t, t],
+      });
+      if (kind === "module") made.modules++;
+      return id;
+    };
+    cur.levels.forEach((lv) => {
+      const lvl = levelId.get(`${cur.sid}/${lv.slug}`)!;
+      lv.disciplines.forEach((d, di) => {
+        const dId = insertNode(lvl, null, "discipline", d.name, sortOf(di));
+        d.modules.forEach((m, mi) => insertNode(lvl, dId, "module", m, sortOf(mi)));
+      });
     });
-    if (kind === "module") made.modules++;
-    return id;
-  };
-  BIOLOGY_LEVELS.forEach((lv) => {
-    const lvl = levelId.get(`${generalBio}/${lv.slug}`)!;
-    lv.disciplines.forEach((d, di) => {
-      const dId = insertNode(lvl, null, "discipline", d.name, sortOf(di));
-      d.modules.forEach((m, mi) => insertNode(lvl, dId, "module", m, sortOf(mi)));
-    });
-  });
+  }
   await flush();
 
   // One planner task per module that does not have one yet (including modules seeded earlier).
@@ -575,8 +615,8 @@ export async function createModuleTask(owner: Viewer, input: ModuleTaskInput): P
   if (taken) throw new ModuleError("conflict", `That ${d.chapter ? "chapter" : "module"} already has a planner task (T-${String(n(taken.num)).padStart(4, "0")}).`);
 
   await db.execute({
-    sql: "UPDATE modules SET objectives = ?, prerequisites = ?, refs = ?, content_status = ?, updated_at = ? WHERE id = ?",
-    args: [JSON.stringify(d.objectives), JSON.stringify(d.prerequisites), JSON.stringify(d.references), d.contentStatus, t, target.id],
+    sql: "UPDATE modules SET objectives = ?, prerequisites = ?, refs = ?, content_status = ?, refcheck_status = CASE WHEN refcheck_hash = ? THEN refcheck_status ELSE 'not_checked' END, updated_at = ? WHERE id = ?",
+    args: [JSON.stringify(d.objectives), JSON.stringify(d.prerequisites), JSON.stringify(d.references), d.contentStatus, refsHash(d.references), t, target.id],
   });
   return createRecord(owner, { title: d.chapter || d.moduleTitle, brief: d.brief, assignedTo: d.assignedTo, priority: d.priority, dueDate: d.dueDate }, { moduleId: target.id });
 }
@@ -594,6 +634,11 @@ export type ModuleEdit = {
   objectives: string[];
   prerequisites: string[];
   references: Reference[];
+  /** The last reference check and whether it still applies to the current list. */
+  refcheckStatus: RefcheckStatus;
+  refcheckCurrent: boolean;
+  refcheckAt: string | null;
+  refcheckReport: StoredItem[];
   doc: Doc;
   contentStatus: ContentStatus;
   status: PublicationStatus;
@@ -673,6 +718,10 @@ export async function getModuleEdit(v: Viewer, id: string): Promise<{ module: Mo
     objectives: json<string[]>(r.objectives, []),
     prerequisites: json<string[]>(r.prerequisites, []),
     references: json<Reference[]>(r.refs, []),
+    refcheckStatus: readRefcheck(r).status,
+    refcheckCurrent: readRefcheck(r).current,
+    refcheckAt: readRefcheck(r).checkedAt,
+    refcheckReport: readRefcheck(r).items,
     doc,
     contentStatus: s(r.content_status) as ContentStatus,
     status: s(r.status) as PublicationStatus,
@@ -731,11 +780,11 @@ export async function saveModule(actor: Viewer, id: string, input: ModuleSaveInp
   const db = await conn();
   const t = nowIso();
   const res = await db.execute({
-    sql: `UPDATE modules SET title = ?, summary = ?, objectives = ?, prerequisites = ?, refs = ?, content_status = ?, doc = ?, html = ?, headings = ?, body_text = ?, has_math = ?,
+    sql: `UPDATE modules SET title = ?, summary = ?, objectives = ?, prerequisites = ?, refs = ?, content_status = ?, doc = ?, html = ?, headings = ?, body_text = ?, has_math = ?, refcheck_status = CASE WHEN refcheck_hash = ? THEN refcheck_status ELSE 'not_checked' END,
                  reading_minutes = ?, version = version + 1, last_editor_name = ?, updated_at = ? WHERE id = ? AND version = ?`,
     args: [
       d.title, d.summary, JSON.stringify(d.objectives), JSON.stringify(d.prerequisites), JSON.stringify(d.references), d.contentStatus, JSON.stringify(parsed.doc), rendered.html,
-      JSON.stringify(rendered.headings), bodyText, rendered.hasMath ? 1 : 0, readingMinutes(bodyText), actor.name, t, id, cur.module.version,
+      JSON.stringify(rendered.headings), bodyText, rendered.hasMath ? 1 : 0, refsHash(d.references), readingMinutes(bodyText), actor.name, t, id, cur.module.version,
     ],
   });
   if (!res.rowsAffected) throw new ModuleError("conflict", "This module was changed in the meantime. Reload to continue.");
@@ -746,13 +795,15 @@ export async function saveModule(actor: Viewer, id: string, input: ModuleSaveInp
 }
 
 /** Why a module cannot be published yet. Empty means it can. These are the platform's minimum quality rules, not suggestions. */
-export function publishProblems(m: Pick<ModuleEdit, "kind" | "title" | "objectives" | "references" | "contentStatus"> & { wordCount: number }): string[] {
+export function publishProblems(m: Pick<ModuleEdit, "kind" | "title" | "objectives" | "references" | "contentStatus" | "refcheckStatus" | "refcheckCurrent" | "refcheckReport"> & { wordCount: number }): string[] {
   const out: string[] = [];
   if (m.kind === "discipline") out.push("A discipline heading is not published; publish the modules under it.");
   if (m.wordCount < MIN_PUBLISH_WORDS) out.push(`The body has ${m.wordCount} words. A module needs at least ${MIN_PUBLISH_WORDS} before it can be published.`);
   if (!m.objectives.length) out.push("Add at least one learning objective.");
   if (!m.references.length) out.push("Add at least one reference. Every reference must be genuine and verifiable (APA 7th edition, with the DOI when there is one).");
   if (m.contentStatus !== "final") out.push('Set the content status to "Final" after scientific review.');
+  // Every reference must pass the check against the current list. This cannot be overridden.
+  out.push(...refcheckGate({ count: m.references.length, status: m.refcheckStatus, current: m.refcheckCurrent, report: m.refcheckReport }));
   return out;
 }
 

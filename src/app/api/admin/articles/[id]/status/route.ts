@@ -2,6 +2,7 @@ import { z } from "zod";
 import { fail, json, readJson } from "@/lib/api";
 import { HttpError, requireApi } from "@/lib/auth/guard";
 import { articleErrorToHttp, loadEditable, loadViewable } from "@/lib/article-access";
+import { connectorArticlePublished } from "@/lib/connector/hooks";
 import { pingIndexNow } from "@/lib/indexnow";
 import { archiveArticle, publishArticle, unpublishArticle } from "@/lib/store/articles";
 import { logActivity } from "@/lib/store/activity";
@@ -38,6 +39,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
         const r = await publishArticle(a.id, session.user.id, { override: override && session.user.role === "owner" });
         if (!r.ok) return json({ ok: false, error: "not_ready", problems: r.problems, belowMinimum: Boolean(r.belowMinimum) }, 422);
         await onArticlePublished(a.id, { id: session.user.id, name: session.user.name });
+        await connectorArticlePublished(a.id); // the DCE connector's outbox (never blocks the publish)
         await pingIndexNow([r.article.slug]);
         return json({ ok: true, status: r.article.status, slug: r.article.slug });
       }

@@ -8,6 +8,7 @@ const explore = [
   ...navLinks,
   { href: "/contribute", label: "Join as contributor" },
   { href: "/privacy", label: "Privacy notice" },
+  { href: "/terms", label: "Terms of use" },
 ];
 const half = Math.ceil(explore.length / 2);
 

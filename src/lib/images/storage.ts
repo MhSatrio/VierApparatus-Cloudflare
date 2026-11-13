@@ -6,9 +6,9 @@ import { signRequest } from "./sigv4";
  *   r2-binding   Cloudflare Worker with an R2 bucket bound as IMAGES (wrangler.jsonc "r2_buckets"). Used in production on Cloudflare.
  *   r2-s3        R2 through its S3-compatible API, with R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and R2_BUCKET.
  *                Used on Vercel and when running on a PC against the real bucket.
- *   database     Nothing configured: bytes stay in the database (the older behaviour), so local development and tests keep working.
+ *   none         Nothing configured. Uploads are refused: images are never stored anywhere except R2.
  *
- * Public addresses are always IMAGE_PUBLIC_BASE_URL plus the object key (default https://image.vierapparatus.com).
+ * Public addresses are always IMAGE_PUBLIC_BASE_URL plus the object key (default https://images.vierapparatus.com, the domain the bucket is served on).
  * Secrets are read on the server only and are never sent to the browser.
  */
 
@@ -17,9 +17,9 @@ export type R2BucketLike = {
   delete(key: string): Promise<void>;
 };
 
-export type ImageBackend = "r2-binding" | "r2-s3" | "database";
+export type ImageBackend = "r2-binding" | "r2-s3" | "none";
 
-export const DEFAULT_IMAGE_BASE = "https://image.vierapparatus.com";
+export const DEFAULT_IMAGE_BASE = "https://images.vierapparatus.com";
 export const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
 
 /** The Worker's environment, if this code runs inside a Cloudflare Worker started by OpenNext. Read without importing the package, so Vercel builds do not need it. */
@@ -46,7 +46,7 @@ function s3Config(): S3Config | null {
 export function imageBackend(): ImageBackend {
   if (binding()) return "r2-binding";
   if (s3Config()) return "r2-s3";
-  return "database";
+  return "none";
 }
 
 export function publicImageBase(): string {

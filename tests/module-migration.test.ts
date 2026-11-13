@@ -85,6 +85,7 @@ describe("migration 9: subjects become subject -> specialization", () => {
   it("creates the product tables", async () => {
     const names = (await db.execute("SELECT name FROM sqlite_master WHERE type = 'table'")).rows.map((r) => String(r.name));
     for (const t of ["products", "product_categories", "product_comments", "product_comment_log", "product_imports", "product_redirects", "module_redirects", "module_links"]) expect(names).toContain(t);
-    expect(Number((await db.execute("SELECT value FROM meta WHERE key = 'schema_version'")).rows[0].value)).toBe(11);
+    // 13 = the website connector tables (migration 13); the product tables above come from migration 10.
+    expect(Number((await db.execute("SELECT value FROM meta WHERE key = 'schema_version'")).rows[0].value)).toBe(13);
   });
 });

@@ -46,6 +46,13 @@ export const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = {
 };
 export const REVIEW_STATUS_SHORT: Record<ReviewStatus, string> = { listed: "Listed, not reviewed", in_review: "Review in progress", reviewed: "Reviewed" };
 
+/**
+ * Only a product whose editorial review is finished is indexed by search engines. Unreviewed products (listed, or in progress)
+ * still open for readers, but carry noindex and are left out of the sitemap, so thin manufacturer-only pages do not dilute the site.
+ * Every new product starts as "listed", so it is noindex until it is reviewed.
+ */
+export const isIndexableProduct = (p: { reviewStatus: ReviewStatus }) => p.reviewStatus === "reviewed";
+
 /** Comments are averaged into a rating only when there are at least this many approved, rated ones. */
 export const MIN_RATINGS_FOR_SCORE = 3;
 

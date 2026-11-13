@@ -603,6 +603,69 @@ export const MIGRATIONS: { version: number; statements: string[] }[] = [
     // Who added a product: a contributor can edit only the products they added (migration 11).
     statements: [`ALTER TABLE products ADD COLUMN created_by TEXT`, `CREATE INDEX IF NOT EXISTS products_created_by ON products(created_by)`],
   },
+  {
+    version: 12,
+    // Reference check (APA references checked against Crossref before publication). Articles get a reference list of their own;
+    // modules already have one (`refs`). Both record the last check: its status (not_checked / pass / fail), the fingerprint of the
+    // list it checked, the per-reference report and when it ran. Additive only; existing rows get "not checked".
+    statements: [
+      `ALTER TABLE articles ADD COLUMN refs TEXT NOT NULL DEFAULT '[]'`,
+      `ALTER TABLE articles ADD COLUMN refcheck_status TEXT NOT NULL DEFAULT 'not_checked'`,
+      `ALTER TABLE articles ADD COLUMN refcheck_hash TEXT NOT NULL DEFAULT ''`,
+      `ALTER TABLE articles ADD COLUMN refcheck_report TEXT NOT NULL DEFAULT '[]'`,
+      `ALTER TABLE articles ADD COLUMN refcheck_at TEXT`,
+      `ALTER TABLE modules ADD COLUMN refcheck_status TEXT NOT NULL DEFAULT 'not_checked'`,
+      `ALTER TABLE modules ADD COLUMN refcheck_hash TEXT NOT NULL DEFAULT ''`,
+      `ALTER TABLE modules ADD COLUMN refcheck_report TEXT NOT NULL DEFAULT '[]'`,
+      `ALTER TABLE modules ADD COLUMN refcheck_at TEXT`,
+    ],
+  },
+  {
+    version: 13,
+    // Website connector (for the DCE desktop app): access tokens, the event outbox the app reads (articles published, products
+    // published or reviewed) and the jobs the owner sends to it. Tokens are stored as SHA-256 hashes only. Additive only.
+    statements: [
+      `CREATE TABLE IF NOT EXISTS connector_tokens (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        scopes TEXT NOT NULL DEFAULT '[]',
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        last_used_at TEXT,
+        last_seen_at TEXT,
+        client_cursor INTEGER NOT NULL DEFAULT 0,
+        client_version TEXT NOT NULL DEFAULT '',
+        client_message TEXT NOT NULL DEFAULT '',
+        revoked_at TEXT
+      )`,
+      `CREATE TABLE IF NOT EXISTS connector_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        dedupe_key TEXT NOT NULL UNIQUE,
+        payload TEXT NOT NULL
+      )`,
+      `CREATE INDEX IF NOT EXISTS connector_events_type ON connector_events(type, id)`,
+      `CREATE TABLE IF NOT EXISTS connector_jobs (
+        id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        created_by TEXT,
+        type TEXT NOT NULL,
+        target_id TEXT NOT NULL DEFAULT '',
+        target_title TEXT NOT NULL DEFAULT '',
+        payload TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('pending', 'claimed', 'done', 'failed')),
+        claimed_by TEXT,
+        claimed_at TEXT,
+        finished_at TEXT,
+        result TEXT NOT NULL DEFAULT '',
+        error TEXT NOT NULL DEFAULT ''
+      )`,
+      `CREATE INDEX IF NOT EXISTS connector_jobs_status ON connector_jobs(status, ts)`,
+    ],
+  },
 ];
 
 /**
@@ -682,18 +745,48 @@ function moduleHierarchyStatements(): string[] {
 
 const META =`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`;
 
+const VERSION_SQL = "SELECT value FROM meta WHERE key = 'schema_version'";
+
+async function readVersion(db: Pick<Client, "execute">): Promise<number> {
+  const row = (await db.execute({ sql: VERSION_SQL, args: [] })).rows[0];
+  return row ? Number(row.value) : 0;
+}
+
+/**
+ * Brings the schema up to date. Several processes can start at the same time (the build's prerender workers, or two first
+ * requests). Each pending migration runs in one write transaction that reads the version again inside it, so a process that
+ * finds the migration already applied does nothing. Without this, two processes could both run the same ALTER TABLE and the
+ * second would fail with "duplicate column name".
+ */
 export async function migrate(db: Client): Promise<void> {
+  // A local SQLite file: wait for another connection's write instead of failing at once. Turso (HTTP) does not take this pragma.
+  await db.execute("PRAGMA busy_timeout = 15000").catch(() => {});
   await db.execute(META);
-  const row = (await db.execute({ sql: "SELECT value FROM meta WHERE key = 'schema_version'", args: [] })).rows[0];
-  const current = row ? Number(row.value) : 0;
-  for (const m of MIGRATIONS) {
-    if (m.version <= current) continue;
-    await db.batch(
-      [
-        ...m.statements.map((sql) => ({ sql, args: [] as never[] })),
-        { sql: "INSERT INTO meta(key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", args: [String(m.version)] },
-      ],
-      "write",
-    );
+  if ((await readVersion(db)) >= MIGRATIONS[MIGRATIONS.length - 1].version) return;
+  for (const m of MIGRATIONS) await applyMigration(db, m);
+}
+
+const isBusy = (e: unknown) => /SQLITE_BUSY|database is locked/i.test(`${(e as { code?: unknown })?.code ?? ""} ${(e as { message?: unknown })?.message ?? ""}`);
+
+/** One migration, in its own write transaction. A busy database (another connection is writing) is retried after a short random wait. */
+async function applyMigration(db: Client, m: (typeof MIGRATIONS)[number]): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const tx = await db.transaction("write");
+      try {
+        if (m.version > (await readVersion(tx))) {
+          for (const sql of m.statements) await tx.execute({ sql, args: [] as never[] });
+          await tx.execute({ sql: "INSERT INTO meta(key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", args: [String(m.version)] });
+        }
+        await tx.commit();
+        return;
+      } catch (e) {
+        await tx.rollback().catch(() => {});
+        throw e;
+      }
+    } catch (e) {
+      if (!isBusy(e) || attempt >= 60) throw e;
+      await new Promise((r) => setTimeout(r, 20 + Math.random() * 120));
+    }
   }
 }

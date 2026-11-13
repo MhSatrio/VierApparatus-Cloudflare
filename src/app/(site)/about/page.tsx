@@ -35,7 +35,7 @@ export default function AboutPage() {
               Scientific knowledge becomes more valuable the more widely it can be understood, questioned and used. Too often it stays inside institutions, behind paywalls and in vocabulary that only specialists share.
             </p>
             <p>
-              VierApparatus is an independent project founded by {site.founder}, who wanted to keep learning in the open: to explain research clearly, comment on it honestly, and give other people a place to do the same. It is a small publication and it does not claim to be more than that.
+              VierApparatus is an independent project made to keep learning in the open: to explain research clearly, comment on it honestly, and give other people a place to do the same. It is a small publication and it does not claim to be more than that.
             </p>
             <p>
               It is also a place to disagree well. Readers are invited to challenge what we publish, with evidence, and we will say so when we change our minds.

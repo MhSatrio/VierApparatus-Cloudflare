@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Jost } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/site";
+import { adsensePublisher } from "@/components/ads/config";
 
 // Jost is an open-source (SIL OFL) geometric sans in the Futura tradition, self-hosted by next/font at build time
 // (no request to Google when a visitor loads the page).
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
   alternates: { canonical: "/", types: { "application/rss+xml": "/rss.xml" } },
   robots: { index: true, follow: true },
+  // Site verification for Google AdSense: <meta name="google-adsense-account" content="ca-pub-…">.
+  ...(adsensePublisher ? { other: { "google-adsense-account": adsensePublisher } } : {}),
 };
 
 export const viewport: Viewport = { themeColor: "#4570B6", width: "device-width", initialScale: 1 };

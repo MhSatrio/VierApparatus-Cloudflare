@@ -7,12 +7,20 @@ import { docToText, readingMinutes, slugify, truncate, wordCount } from "../cont
 import { getMinWords } from "./site-settings";
 import { belowMinimum } from "../publish-rules";
 import { audit, b, json, likePattern, n, nn, nowIso, s, sn, type Row } from "./util";
+import { readRefcheck, refcheckGate, type RefcheckStatus, type StoredItem, type StoredRef } from "./refcheck";
 import { recordRevision, type RevisionKind } from "./revisions";
 
 export type ArticleStatus = "draft" | "published" | "archived";
 export type ReviewStatus = "none" | "requested" | "revision" | "approved";
 
 export type ArticleSummary = {
+  /** The references checked against Crossref (APA text and DOI), and the state of the last check. */
+  refs: StoredRef[];
+  refcheckStatus: RefcheckStatus;
+  /** False when the reference list has changed since the last check, so that check no longer applies. */
+  refcheckCurrent: boolean;
+  refcheckAt: string | null;
+  refcheckReport: StoredItem[];
   id: string;
   slug: string;
   title: string;
@@ -51,10 +59,17 @@ export type ArticleRecord = ArticleSummary & { doc: Doc; html: string; bodyText:
 const SUMMARY_COLS = `a.id, a.slug, a.title, a.excerpt, a.category_id, c.name AS category_name, c.slug AS category_slug, a.author_name, a.author_id, a.status,
   a.cover_url, a.cover_alt, a.cover_credit, a.cover_width, a.cover_height, a.tags, a.seo_title, a.seo_description, a.reading_minutes, a.featured,
   a.submitted_for_review, a.review_status, a.assigned_to, u.name AS assigned_name, a.last_editor_id, a.last_editor_name,
-  a.source, a.version, a.created_at, a.updated_at, a.published_at`;
+  a.source, a.version, a.created_at, a.updated_at, a.published_at, a.refs, a.refcheck_status, a.refcheck_hash, a.refcheck_report, a.refcheck_at`;
 const FROM = `FROM articles a LEFT JOIN categories c ON c.id = a.category_id LEFT JOIN users u ON u.id = a.assigned_to`;
 
-const toSummary = (r: Row): ArticleSummary => ({
+const toSummary = (r: Row): ArticleSummary => {
+  const rc = readRefcheck(r);
+  return {
+  refs: json<StoredRef[]>(r.refs, []),
+  refcheckStatus: rc.status,
+  refcheckCurrent: rc.current,
+  refcheckAt: rc.checkedAt,
+  refcheckReport: rc.items,
   id: s(r.id),
   slug: s(r.slug),
   title: s(r.title),
@@ -86,7 +101,8 @@ const toSummary = (r: Row): ArticleSummary => ({
   createdAt: s(r.created_at),
   updatedAt: s(r.updated_at),
   publishedAt: sn(r.published_at),
-});
+  };
+};
 
 const toRecord = (r: Row): ArticleRecord => {
   const parsed = docSchema.safeParse(json<unknown>(r.doc, null));
@@ -410,6 +426,8 @@ export async function publishArticle(id: string, actorId: string | null, opts: {
   const a = await getArticleById(id);
   if (!a) throw new ArticleError("not_found", "Article not found.");
   const problems = publishProblems(a);
+  // Every reference must pass the check against the current list (no owner override for this).
+  problems.push(...refcheckGate({ count: a.refs.length, status: a.refcheckStatus, current: a.refcheckCurrent, report: a.refcheckReport }));
   // Minimum length: a short article is refused unless the owner explicitly overrides the rule for this publication.
   const min = await getMinWords();
   const words = wordCount(a.bodyText);

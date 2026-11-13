@@ -38,6 +38,16 @@ export default function PrivacyPage() {
           <p>
             Messages and proposals are kept while they are needed to handle your request and for editorial records, then deleted. You can ask us to access, correct or delete what we hold about you at any time by writing to <a href={`mailto:${site.email}`}>{site.email}</a>.
           </p>
+          <h2>Advertising and cookies</h2>
+          <p>
+            We plan to show advertising to help fund the site. When advertising is enabled, it is served by Google AdSense. Google and its partners may then use cookies, and similar technologies, to show ads based on your earlier visits to this site and to other sites. Google’s own explanation of this is at policies.google.com/technologies/partner-sites, and you can control personalised ads in Google’s Ads Settings at adssettings.google.com.
+          </p>
+          <p>
+            Visitors in the European Economic Area, the United Kingdom and Switzerland will be asked for consent before personalised advertising cookies are set, through a consent tool that is shown on their first visit. Our own visit counting, described above, does not use advertising cookies and is not shared with advertisers.
+          </p>
+          <p>
+            Terms for the use of the site, including advertising and links to other sites, are in our <a href="/terms">terms of use</a>.
+          </p>
           <h2>Contact</h2>
           <p>
             {site.name} · <a href={`mailto:${site.email}`}>{site.email}</a>

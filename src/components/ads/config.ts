@@ -18,3 +18,10 @@ export const ADSENSE = {
 
 /** True only when the switch, the publisher ID and at least one ad unit are configured. */
 export const adsenseReady = ADSENSE.enabled && /^ca-pub-\d{10,20}$/.test(ADSENSE.client) && (ADSENSE.verticalSlot !== "" || ADSENSE.squareSlot !== "");
+
+/**
+ * The publisher ID when it is well formed, otherwise null. Used by the Google verification script (every page), the
+ * google-adsense-account meta tag and /ads.txt. Unlike adsenseReady it does not need the switch or any ad unit: verifying the
+ * site with Google does not show ads.
+ */
+export const adsensePublisher: string | null = /^ca-pub-\d{10,20}$/.test(ADSENSE.client) ? ADSENSE.client : null;

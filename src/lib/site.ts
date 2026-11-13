@@ -6,7 +6,6 @@ export const site = {
     "VierApparatus is an independent science publication: clear, evidence-based articles on biotechnology, microbiology, research methods and the questions around them.",
   url: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, ""),
   email: "info@vierapparatus.com",
-  founder: "Muhammad Satrio",
 } as const;
 
 export const navLinks = [

@@ -30,7 +30,8 @@ export type Action =
   | "settings.manage"
   | "sponsors.manage" // sponsor campaigns and per-article sponsorship (owner only)
   | "newsletter.manage" // subscribers, import/export and the popup switch (owner only)
-  | "products.manage"; // the product catalogue, its imports, and the moderation of product comments (owner only)
+  | "products.manage" // the product catalogue, its imports, and the moderation of product comments (owner only)
+  | "connector.manage"; // the website connector for DCE: tokens, events and jobs (owner only)
 
 export type Actor = { role: Role; permissions: readonly string[] };
 

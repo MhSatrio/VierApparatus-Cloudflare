@@ -2,6 +2,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
 import { Tracker } from "@/components/Tracker";
+import { AdsenseScript } from "@/components/AdsenseScript";
 import { NewsletterPopup } from "@/components/newsletter/NewsletterPopup";
 import { site } from "@/lib/site";
 import { listCategories } from "@/lib/store/categories";
@@ -30,11 +31,11 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           logo: `${site.url}/icon-512.png`,
           email: site.email,
           description: site.description,
-          founder: { "@type": "Person", name: site.founder },
         }}
       />
       {popup.enabled && <NewsletterPopup title={popup.title} message={popup.message} topics={topics.map((t) => t.name)} />}
       <Tracker />
+      <AdsenseScript />
     </>
   );
 }

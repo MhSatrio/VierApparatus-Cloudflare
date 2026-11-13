@@ -17,6 +17,7 @@ import { MarkdownTemplate } from "./MarkdownTemplate";
 import { ArticleSponsorForm } from "../sponsor/ArticleSponsorForm";
 import { MediaPicker, useImageUpload, type PickedImage } from "./MediaPicker";
 import { usePrompt } from "./PromptDialog";
+import { RefCheckPanel, type RefcheckView } from "../refcheck/RefCheckPanel";
 
 export type Meta = {
   title: string;
@@ -60,6 +61,10 @@ export type EditorProps = {
   publishedAt: string | null;
   /** Owner's minimum word count for publication (0 = no minimum). */
   minWords: number;
+  /** The reference list as stored (pasted in the reference check). */
+  references: { text: string; doi: string }[];
+  /** The last recorded reference check. */
+  refcheck: RefcheckView;
 };
 
 let counter = 0;
@@ -99,6 +104,7 @@ export function ArticleEditor(props: EditorProps) {
   const [armedKey, setArmedKey] = useState<string | null>(null);
   const [coverBusy, setCoverBusy] = useState(false);
   const [imported, setImported] = useState<ImportOutcome | null>(null);
+  const [refcheck, setRefcheck] = useState<RefcheckView>(props.refcheck);
 
   // ---- history (document-level undo/redo; typing inside a field also keeps the browser's own undo) ----
   const past = useRef<Item[][]>([]);
@@ -457,6 +463,7 @@ export function ArticleEditor(props: EditorProps) {
           <button type="button" className={tb} onClick={() => void save()} disabled={saving || !dirty || conflict}>
             Save
           </button>
+          <RefCheckPanel entity="article" id={id} value={refcheck} initialText={props.references.map((r) => r.text).join("\n\n")} onChange={(next) => setRefcheck(next)} disabled={!props.canWrite} />
           {id && (
             <Link href={`/admin/articles/${id}/preview`} className={tb}>
               Full preview

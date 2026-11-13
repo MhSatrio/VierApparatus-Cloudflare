@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { tempDb } from "./helpers";
+import { tempDb, markReferencesChecked } from "./helpers";
 import { setMinWords } from "@/lib/store/site-settings";
 
 // Route handlers read the session cookie through next/headers; tests swap identities by changing this jar.
@@ -308,6 +308,7 @@ describe("assignment, the editorial workflow and publishing", () => {
     const cat = (await db.execute("SELECT id FROM categories LIMIT 1")).rows[0].id as string;
     await updateArticle(articleId, { ...articleBody("Workflow task"), categoryId: cat, coverUrl: "/media/x", coverAlt: "cover" }, { id: owner.id, name: owner.name });
     as("owner");
+    await markReferencesChecked("article", articleId, owner.id);
     const ok = await statusRoute.POST(post(`/api/admin/articles/${articleId}/status`, "owner", { action: "publish" }), params({ id: articleId }));
     expect(ok.status).toBe(200);
     {

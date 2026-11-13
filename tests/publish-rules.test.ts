@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { tempDb } from "./helpers";
+import { tempDb, markReferencesChecked } from "./helpers";
 import { belowMinimum } from "@/lib/publish-rules";
 import { createArticle, getArticleById, publishArticle } from "@/lib/store/articles";
 import { DEFAULT_MIN_WORDS, getMinWords, setMinWords } from "@/lib/store/site-settings";
@@ -44,6 +44,7 @@ describe("minimum word count", () => {
     }
     expect((await getArticleById(a.id))?.status).toBe("draft");
 
+    await markReferencesChecked("article", a.id);
     const forced = await publishArticle(a.id, "owner-1", { override: true });
     expect(forced.ok).toBe(true);
     const logged = (await (await conn()).execute({ sql: "SELECT COUNT(*) AS c FROM audit_log WHERE action = 'article.publish_override' AND detail LIKE ?", args: ["%minimum 250%"] })).rows[0];
@@ -53,6 +54,7 @@ describe("minimum word count", () => {
   it("publishes a long enough article without any override", async () => {
     await setMinWords(250);
     const a = await draft("Long enough review", 300);
+    await markReferencesChecked("article", a.id);
     const ok = await publishArticle(a.id, "owner-1");
     expect(ok.ok).toBe(true);
   });
@@ -60,6 +62,7 @@ describe("minimum word count", () => {
   it("switching the rule off (0) lets any article publish", async () => {
     await setMinWords(0);
     const a = await draft("A very short note", 5);
+    await markReferencesChecked("article", a.id);
     expect((await publishArticle(a.id, "owner-1")).ok).toBe(true);
   });
 });
