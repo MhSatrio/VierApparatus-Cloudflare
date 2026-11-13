@@ -7,6 +7,7 @@ import { countByStatus, listForAdmin, listRecentlyPublished, type ArticleStatus 
 import { site } from "@/lib/site";
 import { CopyLinks } from "@/components/admin/CopyLinks";
 import { CopyText } from "@/components/admin/CopyText";
+import { RefCheckSelect } from "@/components/admin/refcheck/RefCheckSelect";
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
@@ -73,10 +74,10 @@ export default async function ArticlesAdminPage({ searchParams }: { searchParams
           </div>
         ) : (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Articles table">
-            <table className="w-full min-w-[72rem] text-sm">
+            <table className="w-full min-w-[80rem] text-sm">
               <thead className="bg-sky text-left">
                 <tr>
-                  {["Title", "Category", "Author", "Assigned to", "Last edited by", "Status", "Review", "Updated", "Published", "Actions"].map((h) => (
+                  {["Title", "Category", "Author", "Assigned to", "Last edited by", "Status", "Review", "Reference check", "Updated", "Published", "Actions"].map((h) => (
                     <th key={h} scope="col" className="px-3 py-2 font-semibold">
                       {h}
                     </th>
@@ -109,6 +110,9 @@ export default async function ArticlesAdminPage({ searchParams }: { searchParams
                       ) : (
                         <span className="text-xs font-semibold">{a.reviewStatus === "requested" ? "Awaiting review" : a.reviewStatus === "revision" ? "Revision requested" : "Approved"}</span>
                       )}
+                    </td>
+                    <td className="px-3 py-2">
+                      <RefCheckSelect entity="article" id={a.id} status={a.refcheckStatus} label={a.title} />
                     </td>
                     <td className="whitespace-nowrap px-3 py-2">{dateOnly(a.updatedAt)}</td>
                     <td className="whitespace-nowrap px-3 py-2">{dateOnly(a.publishedAt)}</td>

@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { tempDb } from "./helpers";
+import { tempDb, markReferencesChecked } from "./helpers";
 import { DESC_MAX, DESC_MIN, TITLE_MAX, fitDescription, fitTitle, truncateAtWord } from "@/lib/seo";
 import { INDEXNOW_KEY, chunk, cleanUrls, indexNowPayload } from "@/lib/indexnow";
 
@@ -78,6 +78,7 @@ describe("IndexNow CLI (--dry-run, no network)", () => {
       const doc = { version: 1 as const, blocks: [{ type: "paragraph" as const, content: [{ t: "text" as const, text: "Body" }] }] };
       const base = { excerpt: "A summary that is long enough to publish.", authorName: "Test Author", categoryId: "cat_microbiology", doc };
       const live = await createArticle({ ...base, title: "Live article for indexing" }, { id: null });
+      await markReferencesChecked("article", live.id);
       await publishArticle(live.id, null);
       await createArticle({ ...base, title: "Draft that must not be submitted" }, { id: null });
 

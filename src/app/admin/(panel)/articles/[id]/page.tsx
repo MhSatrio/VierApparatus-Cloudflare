@@ -39,6 +39,8 @@ export default async function EditArticlePage({ params, searchParams }: { params
         source={a.source}
         publishedAt={a.publishedAt}
         minWords={minWords}
+        references={a.refs}
+        refcheck={{ status: a.refcheckStatus, current: a.refcheckCurrent, checkedAt: a.refcheckAt, items: a.refcheckReport }}
         owner={can(user, "articles.manage")}
         initialTab={tab === "markdown" ? "markdown" : tab === "details" ? "details" : tab === "history" ? "history" : "visual"}
         categories={categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug }))}

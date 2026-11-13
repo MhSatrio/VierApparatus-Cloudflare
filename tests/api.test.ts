@@ -1,6 +1,6 @@
 import { setMinWords } from "@/lib/store/site-settings";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { PNG_1X1, tempDb } from "./helpers";
+import { tempDb, markReferencesChecked } from "./helpers";
 
 // The route handlers read the session cookie through next/headers; tests swap identities by changing this jar.
 const jar = new Map<string, string>();
@@ -36,7 +36,6 @@ import * as subRoute from "@/app/api/admin/submissions/[id]/route";
 import * as contactRoute from "@/app/api/contact/route";
 import * as contributeRoute from "@/app/api/contribute/route";
 import * as collectRoute from "@/app/api/collect/route";
-import * as mediaPublic from "@/app/media/[id]/route";
 
 const ORIGIN = "http://localhost:3000";
 let cleanup: () => void;
@@ -171,6 +170,7 @@ describe("contributor isolation", () => {
     expect((await articleRoute.GET(req(`/api/admin/articles/${owners.id}`, { method: "GET" }), params({ id: owners.id }))).status).toBe(404);
     expect((await articleRoute.PUT(req(`/api/admin/articles/${owners.id}`, { method: "PUT", csrf: writerCsrf, body: draftBody() }), params({ id: owners.id }))).status).toBe(404);
 
+    await markReferencesChecked("article", articleId);
     await publishArticle(articleId, ownerId);
     const put = await articleRoute.PUT(req(`/api/admin/articles/${articleId}`, { method: "PUT", csrf: writerCsrf, body: draftBody({ title: "Sneaky edit after publishing" }) }), params({ id: articleId }));
     expect(put.status).toBe(403);
@@ -197,25 +197,10 @@ describe("contributor isolation", () => {
     await setPermissions(writerId, ["articles.write", "media.upload"], ownerId);
   });
 
-  it("can upload images only with the media permission, and only real images", async () => {
-    as(writerToken);
-    const form = new FormData();
-    form.set("file", new File([PNG_1X1], "x.png", { type: "image/png" }));
-    const ok = await mediaRoute.POST(new Request(`${ORIGIN}/api/admin/media`, { method: "POST", headers: { host: "localhost:3000", origin: ORIGIN, "x-csrf-token": writerCsrf }, body: form }));
-    expect(ok.status).toBe(200);
-    const id = (await ok.json()).image.id as string;
-
-    const bad = new FormData();
-    bad.set("file", new File([new TextEncoder().encode("<svg onload=alert(1)></svg>".padEnd(60, " "))], "x.svg", { type: "image/svg+xml" }));
-    const rej = await mediaRoute.POST(new Request(`${ORIGIN}/api/admin/media`, { method: "POST", headers: { host: "localhost:3000", origin: ORIGIN, "x-csrf-token": writerCsrf }, body: bad }));
-    expect(rej.status).toBe(400);
-
-    const pub = await mediaPublic.GET(new Request(`${ORIGIN}/media/${id}`), params({ id }));
-    expect(pub.status).toBe(200);
-    expect(pub.headers.get("content-type")).toBe("image/png");
-    expect(pub.headers.get("cache-control")).toContain("immutable");
-    expect(pub.headers.get("x-content-type-options")).toBe("nosniff");
-    expect((await mediaPublic.GET(new Request(`${ORIGIN}/media/nope`), params({ id: "nope" }))).status).toBe(404);
+  it("no longer stores uploads in the database: the old upload endpoint is retired", async () => {
+    const gone = await mediaRoute.POST(new Request(`${ORIGIN}/api/admin/media`, { method: "POST" }));
+    expect(gone.status).toBe(410);
+    expect(Number((await (await conn()).execute("SELECT COUNT(*) AS c FROM media")).rows[0].c)).toBe(0);
   });
 });
 
@@ -229,6 +214,7 @@ describe("owner capabilities", () => {
     expect((await early.json()).problems.join(" ")).toMatch(/topic/);
 
     await articleRoute.PUT(req(`/api/admin/articles/${id}`, { method: "PUT", csrf: ownerCsrf, body: draftBody({ title: "Owner draft", authorName: "Owner" }) }), params({ id }));
+    await markReferencesChecked("article", id);
     expect((await statusRoute.POST(req(`/api/admin/articles/${id}/status`, { csrf: ownerCsrf, body: { action: "publish" } }), params({ id }))).status).toBe(200);
 
     const wrong = await articleRoute.DELETE(req(`/api/admin/articles/${id}`, { method: "DELETE", csrf: ownerCsrf, body: { confirmSlug: "not-it" } }), params({ id }));

@@ -34,3 +34,20 @@ export const PNG_1X1 = Uint8Array.from(
   atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="),
   (c) => c.charCodeAt(0),
 );
+
+/** A reference used by the tests: a placeholder paper that exists nowhere, so only the test's stand-in lookup can confirm it. */
+export const TEST_REFERENCE = "Placeholder Author. (2020). A reference written for this automated test only. Journal of Tests, 1(1), 1-2. https://doi.org/10.1234/test.2020.1";
+
+/**
+ * Runs the real reference check on an article or module, with a stand-in for Crossref that agrees with the reference text, so that
+ * the publish tests can publish. The check itself is what is tested elsewhere (tests/refcheck.test.ts); this only supplies a pass.
+ */
+export async function markReferencesChecked(entity: "article" | "module", id: string, actorId: string | null = null, text = TEST_REFERENCE): Promise<void> {
+  const { saveRefcheck } = await import("@/lib/store/refcheck");
+  const title = text.match(/\((\d{4})[a-z]?\)\.\s*([^.]+)\./)?.[2] ?? "";
+  const year = Number(text.match(/\((\d{4})/)?.[1] ?? 0);
+  const work = { doi: "10.1234/test.2020.1", title, year, authors: [text.split(",")[0].trim()], container: "Journal of Tests" };
+  const lookup = { byDoi: async () => work, search: async () => [work] };
+  const r = await saveRefcheck(entity, id, text, actorId, lookup);
+  if (r.status !== "pass") throw new Error(`test helper: the reference check did not pass: ${JSON.stringify(r.items)}`);
+}

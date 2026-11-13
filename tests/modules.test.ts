@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { tempDb } from "./helpers";
+import { tempDb, markReferencesChecked } from "./helpers";
 import { bootstrapOwner, createContributorAccount } from "@/lib/auth/service";
 import { conn } from "@/lib/db/client";
 import { viewerOf } from "@/lib/planner-http";
 import { BIOLOGY_LEVELS, BIOLOGY_SPECIALIZATIONS, generalSpecialization, genericLevels, SUBJECTS } from "@/lib/modules/curriculum";
+import { CURRICULUM_SPECIALIZATIONS, specializationLevels } from "@/lib/modules/curriculum-specializations";
 import { doiUrl, moduleHref, normalizeDoi, readableSequence } from "@/lib/modules/shared";
 import {
   buildTree, canEditModule, createModuleTask, ensureCurriculum, findNode, getModuleEdit, getModulePage, getOutline, getSubjectTree, getSubjectWithSpecializations, listModuleUrls, listSubjects,
@@ -69,6 +70,22 @@ describe("the curriculum data", () => {
   it("has a level ladder for every specialization that has no curriculum of its own", () => {
     expect(genericLevels("Chemistry").map((l) => l.slug)).toEqual(["foundations", "basic", "intermediate", "advanced", "specialization", "research", "phd"]);
   });
+  it("gives each of the six specializations with a curriculum 7 levels, 4 disciplines of 7 modules each (196 modules), with unique titles", () => {
+    expect(CURRICULUM_SPECIALIZATIONS).toEqual(["molecular-biology", "cell-biology", "genetics-and-genomics", "biochemistry", "microbiology", "neuroscience"]);
+    for (const slug of CURRICULUM_SPECIALIZATIONS) {
+      const name = BIOLOGY_SPECIALIZATIONS.find((b) => b.slug === slug)!.name;
+      const levels = specializationLevels(slug, name);
+      expect(levels).toHaveLength(7);
+      for (const l of levels) {
+        expect(l.disciplines).toHaveLength(4);
+        expect(l.disciplines.reduce((a, d) => a + d.modules.length, 0)).toBeGreaterThanOrEqual(7);
+      }
+      const all = levels.flatMap((l) => l.disciplines.flatMap((d) => d.modules));
+      expect(all).toHaveLength(196);
+      expect(new Set(all).size).toBe(all.length);
+    }
+  });
+
   it("has the 12 Biology levels with the module counts of the PRD, 232 modules in all, each unique within its level", () => {
     expect(BIOLOGY_LEVELS).toHaveLength(12);
     const counts = BIOLOGY_LEVELS.map((l) => l.disciplines.reduce((a, d) => a + d.modules.length, 0));
@@ -111,9 +128,9 @@ describe("learning modules (database)", () => {
   });
   afterAll(() => cleanup());
 
-  it("installs the six subjects, 40 specializations, their levels, the 232 General Biology modules and a planner task for each", () => {
+  it("installs the six subjects, 40 specializations, their levels, the 1408 modules (232 General Biology and 196 in each of six specializations) and a planner task for each", () => {
     // 35 Biology specializations + 5 General ones; General Biology has 12 levels, each of the other 39 has 7
-    expect(seeded).toEqual({ subjects: 6, specializations: 40, levels: 12 + 39 * 7, modules: 232, tasks: 232 });
+    expect(seeded).toEqual({ subjects: 6, specializations: 40, levels: 12 + 39 * 7, modules: 1408, tasks: 1408 });
   });
 
   it("leaves no redirect on an address that is a real specialization", async () => {
@@ -137,7 +154,7 @@ describe("learning modules (database)", () => {
     const bio = subs[0];
     expect(bio.specializationCount).toBe(35);
     expect(bio.levelCount).toBe(12 + 34 * 7);
-    expect(bio.moduleCount).toBe(232);
+    expect(bio.moduleCount).toBe(1408);
     expect(bio.readableCount).toBe(0);
     expect(subs[1].specializationCount).toBe(1);
     expect(subs[1].levelCount).toBe(7);
@@ -184,9 +201,9 @@ describe("learning modules (database)", () => {
       { id: null, name: "Owner" },
     );
     const mods = await listRecords(ownerView, { type: "module", limit: 500 });
-    expect(mods.total).toBe(232);
+    expect(mods.total).toBe(1408);
     expect(mods.items.every((r) => r.contentType === "module" && r.module)).toBe(true);
-    const first = mods.items.find((r) => r.title === "Introduction to Biology")!;
+    const first = (await listRecords(ownerView, { type: "module", q: "Introduction to Biology", limit: 50 })).items.find((r) => r.title === "Introduction to Biology")!;
     expect(first.module).toMatchObject({ kind: "module", subjectSlug: "bio", subjectName: "Biology", specializationSlug: "general-biology", specializationName: "General Biology", levelSlug: "foundations", levelNum: 1, discipline: "The nature of biology", moduleTitle: "Introduction to Biology", chapter: "", contentStatus: "not_started", publication: "draft", hasBody: false });
     const arts = await listRecords(ownerView, { type: "article", limit: 500 });
     expect(arts.items.some((r) => r.contentType === "module")).toBe(false);
@@ -221,7 +238,7 @@ describe("learning modules (database)", () => {
     let moduleId: string;
     let taskId: string;
     beforeAll(async () => {
-      const t = (await listRecords(ownerView, { type: "module", limit: 500 })).items.find((r) => r.title === "Introduction to Biology")!;
+      const t = (await listRecords(ownerView, { type: "module", q: "Introduction to Biology", limit: 50 })).items.find((r) => r.title === "Introduction to Biology")!;
       moduleId = t.module!.nodeId;
       taskId = t.id;
       await assignRecord(ownerView, taskId, wendy.id);
@@ -287,20 +304,22 @@ describe("learning modules (database)", () => {
         expect(text).toMatch(/reference/);
         expect(text).toMatch(/Final/);
       }
-      expect(publishProblems({ kind: "module", title: "x", objectives: ["a"], references: [REF], contentStatus: "final", wordCount: 5 }).join(" ")).toMatch(/at least 100/);
+      expect(publishProblems({ kind: "module", title: "x", objectives: ["a"], references: [REF], contentStatus: "final", wordCount: 5, refcheckStatus: "pass", refcheckCurrent: true, refcheckReport: [{ index: 0, text: REF.text, status: "pass", reason: "", doi: "", matched: null }] }).join(" ")).toMatch(/at least 100/);
       expect(await getModulePage("bio", "general-biology", "foundations", ["introduction-to-biology"])).toBeNull();
     });
 
     it("publishes by the owner only, then serves the module with Previous and Next", async () => {
       await saveModule(ownerView, moduleId, saveBody({ contentStatus: "final" }));
       await expect(setModulePublication(wendyView, moduleId, "published")).rejects.toMatchObject({ code: "forbidden" });
+      await markReferencesChecked("module", moduleId);
       const done = await setModulePublication(ownerView, moduleId, "published");
       expect(done.ok).toBe(true);
       expect((await getRecord(ownerView, taskId))!.status).toBe("done");
 
       // a second module, so there is something to go to next
-      const second = (await listRecords(ownerView, { type: "module", limit: 500 })).items.find((r) => r.title === "Characteristics of Life")!;
+      const second = (await listRecords(ownerView, { type: "module", q: "Characteristics of Life", limit: 50 })).items.find((r) => r.title === "Characteristics of Life")!;
       await saveModule(ownerView, second.module!.nodeId, saveBody({ title: "Characteristics of Life" }));
+      await markReferencesChecked("module", second.module!.nodeId);
       expect((await setModulePublication(ownerView, second.module!.nodeId, "published")).ok).toBe(true);
 
       const page = (await getModulePage("bio", "general-biology", "foundations", ["introduction-to-biology"]))!;

@@ -108,11 +108,11 @@ describe("contributor access (database)", () => {
 
   it("lets a contributor write a module only when they have modules.write AND the module is assigned to them", async () => {
     const db = await conn();
-    const task = (await listRecords(viewerOf(owner), { type: "module", limit: 500 })).items.find((r) => r.title === "Introduction to Biology")!;
+    const task = (await listRecords(viewerOf(owner), { type: "module", q: "Introduction to Biology", limit: 50 })).items.find((r) => r.title === "Introduction to Biology")!;
     const moduleId = task.module!.nodeId;
     await assignRecord(viewerOf(owner), task.id, moduleOnly.id);
     // the article contributor is given a different module (one task has one assignee)
-    const articleTask = (await listRecords(viewerOf(owner), { type: "module", limit: 500 })).items.find((r) => r.title === "Characteristics of Life")!;
+    const articleTask = (await listRecords(viewerOf(owner), { type: "module", q: "Characteristics of Life", limit: 50 })).items.find((r) => r.title === "Characteristics of Life")!;
     await assignRecord(viewerOf(owner), articleTask.id, article.id);
     // assigned and has modules.write: may edit
     expect(await canEditModule(viewerOf(moduleOnly), moduleId)).toBe(true);

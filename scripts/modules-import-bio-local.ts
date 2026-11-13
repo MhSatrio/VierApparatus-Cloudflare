@@ -19,6 +19,21 @@ import { db, dbConfigured, ensureSchema } from "../src/lib/db/client";
 
 let ROOT = "";
 const specFolders = (): string[] => fs.readdirSync(path.resolve(__dirname, "../content/modules/bio"), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
+
+/** Folders (content/modules/bio/<spec>/<level>/<topic>) whose validator status is drafted_needs_review in manifest.json. */
+let passing: Set<string> | null = null;
+function passingTopics(): Set<string> {
+  if (passing) return passing;
+  const manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../content/modules/bio/manifest.json"), "utf8"));
+  const set = new Set<string>();
+  const add = (levels: { topics: { folder: string; status: string }[] }[]) => {
+    for (const lv of levels) for (const t of lv.topics) if (t.status === "drafted_needs_review") set.add(t.folder.replace(/\\/g, "/"));
+  };
+  add(manifest.levels);
+  for (const sp of manifest.specializationTopics) add(sp.levels);
+  passing = set;
+  return set;
+}
 const now = () => new Date().toISOString();
 const newId = (prefix: string) => `${prefix}_${crypto.randomBytes(9).toString("base64url")}`;
 const minutes = (text: string) => Math.max(1, Math.round(text.split(/\s+/).filter(Boolean).length / 200));
@@ -87,6 +102,9 @@ async function runSpec(folder: string) {
     for (const tp of fs.readdirSync(topicsDir, { withFileTypes: true }).filter((d) => d.isDirectory())) {
       const modFile = path.join(topicsDir, tp.name, "module.md");
       if (!fs.existsSync(modFile)) { missing.push(`${lv.name}/${tp.name} has no module.md`); continue; }
+      // Only topics that pass scripts/validate-bio-content.ts (status drafted_needs_review in manifest.json) go to the database.
+      const key = `content/modules/bio/${folder}/${lv.name}/${tp.name}`;
+      if (!passingTopics().has(key)) { missing.push(`${lv.name}/${tp.name} not imported: it fails the validator (see manifest.json)`); continue; }
       const mod = await first("SELECT id FROM modules WHERE subject_id = ? AND level_id = ? AND kind = 'module' AND slug = ?", [subjectId, levelId, tp.name]);
       if (!mod) { missing.push(`no curriculum row for ${lv.name}/${tp.name}`); continue; }
       const modId = String(mod.id);

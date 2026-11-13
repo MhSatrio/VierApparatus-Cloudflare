@@ -5,9 +5,15 @@ import { countModules, levelLabel, moduleHref, nodeHref, specHref, type SubjectT
  * The left-hand contents of a subject: its academic levels, each opening into its disciplines, modules and chapters.
  * It is plain HTML (details/summary), so levels open and close with no script, and the current level and module are
  * highlighted from the address. A module nobody has published yet is listed, labelled "soon", and is not a link.
+ *
+ * Only the chapters on the way to the module being read are drawn. Drawing every chapter of a whole specialization on each
+ * request cost more CPU than a free Worker allows (error 1102), so the other modules show as links without their chapters.
  */
 export function ModuleSidebar({ tree, activeLevel, activeId }: { tree: SubjectTree; activeLevel?: string; activeId?: string }) {
   const specLink = specHref(tree.subject.slug, tree.spec.slug);
+  // The ids of the nodes on the path from a level down to the active module (including the module itself).
+  const onPath = new Set<string>();
+  if (activeId) for (const level of tree.levels) markPath(level.nodes, activeId, onPath);
   return (
     <nav aria-label={`${tree.spec.name} curriculum`} className="text-sm">
       <Link prefetch={false} href={`/module/${tree.subject.slug}`} className="block text-xs font-semibold uppercase tracking-wider text-ink/55 hover:text-brand">
@@ -39,7 +45,7 @@ export function ModuleSidebar({ tree, activeLevel, activeId }: { tree: SubjectTr
                   <Link prefetch={false} href={moduleHref(tree.subject.slug, tree.spec.slug, level.slug)} className="block py-1.5 text-brand underline underline-offset-4" aria-current={level.slug === activeLevel && !activeId ? "page" : undefined}>
                     Level overview and contents
                   </Link>
-                  {level.nodes.length > 0 && <ul className="pb-2">{renderNodes(level.nodes, tree, level, activeId)}</ul>}
+                  {level.nodes.length > 0 && <ul className="pb-2">{renderNodes(level.nodes, tree, level, activeId, onPath)}</ul>}
                 </div>
               </details>
             </li>
@@ -50,17 +56,30 @@ export function ModuleSidebar({ tree, activeLevel, activeId }: { tree: SubjectTr
   );
 }
 
-function renderNodes(nodes: TreeNode[], tree: SubjectTree, level: TreeLevel, activeId?: string) {
+/** Adds the id of every node on the path to the target to `out`. Returns true when the target is inside these nodes. */
+function markPath(nodes: TreeNode[], target: string, out: Set<string>): boolean {
+  let found = false;
+  for (const n of nodes) {
+    if (n.id === target || markPath(n.children, target, out)) {
+      out.add(n.id);
+      found = true;
+    }
+  }
+  return found;
+}
+
+function renderNodes(nodes: TreeNode[], tree: SubjectTree, level: TreeLevel, activeId: string | undefined, onPath: Set<string>) {
   return nodes.map((n) => {
     if (n.kind === "discipline") {
       return (
         <li key={n.id}>
           <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-ink/55">{n.title}</p>
-          <ul>{renderNodes(n.children, tree, level, activeId)}</ul>
+          <ul>{renderNodes(n.children, tree, level, activeId, onPath)}</ul>
         </li>
       );
     }
     const active = n.id === activeId;
+    const open = onPath.has(n.id);
     return (
       <li key={n.id}>
         {n.readable ? (
@@ -72,7 +91,7 @@ function renderNodes(nodes: TreeNode[], tree: SubjectTree, level: TreeLevel, act
             {n.title} <span className="ml-1 rounded-full bg-ink/10 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide">Soon</span>
           </span>
         )}
-        {n.children.length > 0 && <ul className="ml-3 border-l border-ink/10 pl-2">{renderNodes(n.children, tree, level, activeId)}</ul>}
+        {open && n.children.length > 0 && <ul className="ml-3 border-l border-ink/10 pl-2">{renderNodes(n.children, tree, level, activeId, onPath)}</ul>}
       </li>
     );
   });

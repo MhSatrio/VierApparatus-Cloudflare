@@ -52,7 +52,7 @@ export default async function SpecializationPage({ params }: Ctx) {
             / {tree.spec.name}
           </nav>
           <header className="mt-4 flex flex-wrap items-center gap-5">
-            <Cover thumb={tree.spec.coverThumbUrl} art={tree.spec.slug} />
+            <Cover thumb={tree.spec.coverThumbUrl} art={tree.spec.slug} spec />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-brand">{tree.subject.name}</p>
               <h1 className="mt-1 text-3xl sm:text-5xl">{tree.spec.name}</h1>

@@ -40,3 +40,7 @@ data/products.json.bak
 # Word documentation: kept on the PC only, never in Git
 *.docx
 *.doc
+
+# Product sync folder: CSV exports hold product data; the README stays in Git
+product-sync/*.csv
+product-sync/*.xlsx

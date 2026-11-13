@@ -42,6 +42,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         { href: "/admin/sponsors", label: "Sponsor Management" },
         { href: "/admin/subscribers", label: "Newsletter Subscribers" },
         { href: "/admin/analytics", label: "Analytics" },
+        { href: "/admin/connector", label: "Website connector" },
         { href: "/admin/settings", label: "Settings" },
         { href: "/admin/categories", label: "Topics", secondary: true },
         { href: "/admin/submissions", label: "Proposals", badge: pending, secondary: true },

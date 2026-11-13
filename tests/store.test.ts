@@ -1,6 +1,6 @@
 import { setMinWords } from "@/lib/store/site-settings";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { PNG_1X1, tempDb } from "./helpers";
+import { PNG_1X1, tempDb, markReferencesChecked } from "./helpers";
 import { conn } from "@/lib/db/client";
 import { importMarkdown } from "@/lib/content/markdown";
 import {
@@ -62,6 +62,7 @@ describe("articles", () => {
     expect(refused.ok).toBe(false);
     expect(!refused.ok && refused.problems.join(" ")).toMatch(/topic/);
     const fixed = await updateArticle(a.id, { ...base, title: "Publish me", categoryId: "cat_biotechnology", doc: doc("Body") }, { id: null }, a.version);
+    await markReferencesChecked("article", fixed.id);
     const ok = await publishArticle(fixed.id, null);
     expect(ok.ok).toBe(true);
     expect((await getPublishedBySlug(a.slug))?.title).toBe("Publish me");
@@ -83,6 +84,7 @@ describe("articles", () => {
 
   it("keeps old URLs alive as redirects when a published slug changes, and remembers deleted slugs", async () => {
     const a = await createArticle({ ...base, title: "Moving article", categoryId: "cat_microbiology", doc: doc("Body") }, { id: null });
+    await markReferencesChecked("article", a.id);
     await publishArticle(a.id, null);
     await updateArticle(a.id, { ...base, title: "Moving article", slug: "moved-article", categoryId: "cat_microbiology", doc: doc("Body") }, { id: null });
     expect(await resolveRedirect("moving-article")).toEqual({ kind: "redirect", slug: "moved-article" });
@@ -98,6 +100,7 @@ describe("articles", () => {
   it("supports search, topic filter, pagination, featured, related and archive", async () => {
     for (let i = 1; i <= 5; i++) {
       const a = await createArticle({ ...base, title: `Searchable paper ${i}`, categoryId: "cat_molecular-biology", doc: doc(`The quokka number ${i} lives here`), featured: i === 2 }, { id: null });
+      await markReferencesChecked("article", a.id);
       await publishArticle(a.id, null);
     }
     const q = await listPublished({ q: "quokka", perPage: 2 });

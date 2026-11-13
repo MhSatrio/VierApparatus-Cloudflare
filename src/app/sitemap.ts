@@ -37,6 +37,7 @@ export default async function sitemap(props: { id: Promise<string> }): Promise<M
     { url: u("/contribute"), changeFrequency: "yearly", priority: 0.5 },
     { url: u("/contact"), changeFrequency: "yearly", priority: 0.4 },
     { url: u("/privacy"), changeFrequency: "yearly", priority: 0.2 },
+    { url: u("/terms"), changeFrequency: "yearly", priority: 0.2 },
     ...productPages,
     ...modules.map((m) => ({
       url: u(m.path),

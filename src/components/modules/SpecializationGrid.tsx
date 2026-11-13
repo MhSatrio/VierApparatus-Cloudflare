@@ -29,7 +29,7 @@ export function SpecializationGrid({ items, subjectName }: { items: SpecCard[]; 
           {shown.map((i) => (
             <li key={i.id}>
               <Link prefetch={false} href={i.href} className="group flex h-full gap-4 rounded-xl border border-ink/10 bg-white p-5 shadow-card transition-colors hover:border-brand/60">
-                <Cover thumb={i.coverThumbUrl} art={i.art} className="h-14 w-14" />
+                <Cover thumb={i.coverThumbUrl} art={i.art} spec className="h-14 w-14" />
                 <span className="min-w-0">
                   <span className="block text-lg font-semibold leading-snug group-hover:text-brand">{i.name}</span>
                   <span className="mt-1 block text-sm text-ink/80">{i.description}</span>

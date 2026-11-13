@@ -1,7 +1,7 @@
 import { conn } from "../db/client";
 import { newId, sha256Hex } from "../crypto";
 import { audit, n, nowIso, s, sn, type Row } from "../store/util";
-import { deleteMedia, imageInfo, MAX_IMAGE_BYTES, MAX_IMAGE_SIDE, saveImage } from "../store/media";
+import { deleteMedia, imageInfo, MAX_IMAGE_BYTES, MAX_IMAGE_SIDE } from "../store/media";
 import { deleteObject, imageBackend, publicImageUrl, putObject } from "./storage";
 import { isImageUsed } from "./usage";
 
@@ -83,27 +83,22 @@ export async function storeImage(input: { main: Uint8Array; thumb?: Uint8Array |
   const id = newId("i_");
   const created = nowIso();
   const backend = imageBackend();
+  // Images are stored in Cloudflare R2 only. Without R2 configured, nothing is written anywhere else.
+  if (backend === "none") return { ok: false, error: "Image storage (Cloudflare R2) is not configured on this installation, so the picture cannot be saved. Add the R2 settings first." };
   const written: string[] = [];
-  let row: { storage: "r2" | "database"; key: string; url: string; thumbKey: string | null; thumbUrl: string | null };
+  let row: { storage: "r2"; key: string; url: string; thumbKey: string | null; thumbUrl: string | null };
 
   try {
-    if (backend === "database") {
-      // Nothing configured (local development): the older database store, so uploads keep working end to end.
-      const saved = await saveImage(input.main, { alt: input.alt, userId: input.userId });
-      if (!saved.ok) return saved;
-      row = { storage: "database", key: saved.image.id, url: saved.image.url, thumbKey: null, thumbUrl: null };
-    } else {
-      const ym = created.slice(0, 7).replace("-", "/");
-      const key = `${input.kind}/${ym}/${id}.webp`;
-      const thumbKey = thumbSize ? `thumbnails/${input.kind}/${ym}/${id}.webp` : null;
-      await putObject(key, input.main);
-      written.push(key);
-      if (thumbKey && input.thumb) {
-        await putObject(thumbKey, input.thumb);
-        written.push(thumbKey);
-      }
-      row = { storage: "r2", key, url: publicImageUrl(key), thumbKey, thumbUrl: thumbKey ? publicImageUrl(thumbKey) : null };
+    const ym = created.slice(0, 7).replace("-", "/");
+    const key = `${input.kind}/${ym}/${id}.webp`;
+    const thumbKey = thumbSize ? `thumbnails/${input.kind}/${ym}/${id}.webp` : null;
+    await putObject(key, input.main);
+    written.push(key);
+    if (thumbKey && input.thumb) {
+      await putObject(thumbKey, input.thumb);
+      written.push(thumbKey);
     }
+    row = { storage: "r2", key, url: publicImageUrl(key), thumbKey, thumbUrl: thumbKey ? publicImageUrl(thumbKey) : null };
     await db.execute({
       sql: `INSERT INTO image_assets(id, kind, storage, object_key, url, thumb_key, thumb_url, mime, size, width, height, thumb_width, thumb_height, thumb_size, sha256, original_name, alt, created_by, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, 'image/webp', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,

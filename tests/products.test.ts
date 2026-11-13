@@ -31,6 +31,7 @@ import {
   listProductSitemap, listPublishedProducts, ProductError, runImport, setProductStatus, setProductTexts, updateProduct, type LegacyProduct,
 } from "@/lib/store/products";
 import { getUserByEmail, type User } from "@/lib/store/users";
+import * as productPage from "@/app/(site)/products/[slug]/page";
 import * as productsRoute from "@/app/api/admin/products/route";
 import * as productRoute from "@/app/api/admin/products/[id]/route";
 import * as statusRoute from "@/app/api/admin/products/[id]/status/route";
@@ -308,7 +309,13 @@ describe("products: catalogue, comments and routes (database)", () => {
     for (const s of ["under_review", "approved", "published"] as const) await setProductStatus(ownerView, first.id, s);
     expect((await listPublishedProducts({ q: "search item" })).items.map((x) => x.id)).toEqual([first.id]);
     expect((await getRelatedProducts({ id: "x", categoryId: (await getProduct(first.id))!.categoryId, manufacturer: "Odd Maker" })).map((x) => x.id)).toContain(first.id);
+    // A new product is "listed" (not reviewed): it is published and readable, but it is noindex and not in the sitemap.
+    expect((await listProductSitemap()).map((x) => x.slug)).not.toContain(first.slug);
+    const meta = () => productPage.generateMetadata({ params: Promise.resolve({ slug: first.slug }) });
+    expect((await meta()).robots).toEqual({ index: false, follow: true });
+    await bulkUpdate(ownerView, [first.id], { type: "review", review: "reviewed" });
     expect((await listProductSitemap()).map((x) => x.slug)).toContain(first.slug);
+    expect((await meta()).robots).toEqual({ index: true, follow: true });
     const cats = await listProductCategories({ publishedOnly: true });
     expect(cats.every((c) => c.count > 0)).toBe(true);
   });

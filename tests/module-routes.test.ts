@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { tempDb } from "./helpers";
+import { tempDb, markReferencesChecked } from "./helpers";
 
 // Route handlers read the session cookie through next/headers; tests swap identities by changing this jar.
 const jar = new Map<string, string>();
@@ -148,7 +148,7 @@ describe("module endpoints", () => {
     as("owner");
     const first = await seedRoute.POST(call("/api/admin/modules/seed", "owner", "POST"));
     expect(first.status).toBe(200);
-    expect(await first.json()).toMatchObject({ ok: true, subjects: 6, specializations: 40, modules: 232, tasks: 232 });
+    expect(await first.json()).toMatchObject({ ok: true, subjects: 6, specializations: 40, modules: 1408, tasks: 1408 });
     const again = (await (await seedRoute.POST(call("/api/admin/modules/seed", "owner", "POST"))).json()) as Record<string, number>;
     expect([again.subjects, again.levels, again.modules, again.tasks]).toEqual([0, 0, 0, 0]);
   });
@@ -171,7 +171,7 @@ describe("module endpoints", () => {
     let id: string;
     let taskId: string;
     beforeAll(async () => {
-      const t = (await listRecords(viewerOf(owner), { type: "module", limit: 500 })).items.find((r) => r.title === "Introduction to Biology")!;
+      const t = (await listRecords(viewerOf(owner), { type: "module", q: "Introduction to Biology", limit: 50 })).items.find((r) => r.title === "Introduction to Biology")!;
       id = t.module!.nodeId;
       taskId = t.id;
       await assignRecord(viewerOf(owner), taskId, wendy.id);
@@ -210,6 +210,7 @@ describe("module endpoints", () => {
       expect(notReady.status).toBe(422);
       expect(((await notReady.json()) as { problems: string[] }).problems.join(" ")).toMatch(/Final/);
       await moduleRoute.PUT(call(`/api/admin/modules/${id}`, "owner", "PUT", readyBody({ contentStatus: "final" })), ctx(id));
+      await markReferencesChecked("module", id);
       expect((await publicationRoute.POST(call(`/api/admin/modules/${id}/publication`, "owner", "POST", { status: "published" }), ctx(id))).status).toBe(200);
       expect((await publicationRoute.POST(call(`/api/admin/modules/${id}/publication`, "owner", "POST", { status: "bogus" }), ctx(id))).status).toBe(400);
     });

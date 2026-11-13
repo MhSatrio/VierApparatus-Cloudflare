@@ -118,7 +118,10 @@ beforeAll(async () => {
   await signIn("plain", "pat@example.org", "Contributor-Pass-2026!");
 });
 afterAll(() => cleanup());
-beforeEach(() => jar.clear());
+beforeEach(() => {
+  jar.clear();
+  bindBucket(fakeBucket()); // uploads in these tests go to a fake R2 bucket unless a test says otherwise
+});
 afterEach(() => {
   bindBucket(null);
   vi.unstubAllGlobals();
@@ -153,25 +156,23 @@ describe("image addresses", () => {
     expect(isImageKind(undefined)).toBe(false);
   });
   it("finds the thumbnail of an image made by the upload service, and leaves every other address alone", () => {
-    expect(thumbnailUrl("https://image.vierapparatus.com/articles/2026/11/i_abc-DEF_1.webp")).toBe("https://image.vierapparatus.com/thumbnails/articles/2026/11/i_abc-DEF_1.webp");
-    expect(thumbnailUrl("https://image.vierapparatus.com/modules/2026/11/i_x.webp")).toBe("https://image.vierapparatus.com/thumbnails/modules/2026/11/i_x.webp");
+    expect(thumbnailUrl("https://images.vierapparatus.com/articles/2026/11/i_abc-DEF_1.webp")).toBe("https://images.vierapparatus.com/thumbnails/articles/2026/11/i_abc-DEF_1.webp");
+    expect(thumbnailUrl("https://images.vierapparatus.com/modules/2026/11/i_x.webp")).toBe("https://images.vierapparatus.com/thumbnails/modules/2026/11/i_x.webp");
     expect(thumbnailUrl("/media/m_abcdefgh")).toBe("/media/m_abcdefgh");
     expect(thumbnailUrl("https://elsewhere.example/articles/2026/11/i_x.webp")).toBe("https://elsewhere.example/articles/2026/11/i_x.webp");
-    expect(thumbnailUrl("https://image.vierapparatus.com/something/else.png")).toBe("https://image.vierapparatus.com/something/else.png");
+    expect(thumbnailUrl("https://images.vierapparatus.com/something/else.png")).toBe("https://images.vierapparatus.com/something/else.png");
     expect(thumbnailUrl(null)).toBeNull();
   });
 });
 
 describe("storing images", () => {
-  it("uses the database when no image storage is configured", async () => {
-    expect(imageBackend()).toBe("database");
+  it("stores nothing and refuses the upload when R2 is not configured", async () => {
+    bindBucket(null);
+    expect(imageBackend()).toBe("none");
     const r = await storeImage({ main: webp(800, 600, 1), thumb: webp(320, 240, 2), kind: "articles", originalName: "Cell photo.JPG", userId: owner.id });
-    expect(r.ok).toBe(true);
-    if (!r.ok) return;
-    expect(r.image.storage).toBe("database");
-    expect(r.image.url).toMatch(/^\/media\/m_/);
-    expect(r.image.width).toBe(800);
-    expect(r.image.originalName).toBe("Cell photo.JPG");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/R2/);
+    expect(Number((await (await conn()).execute("SELECT COUNT(*) AS c FROM image_assets")).rows[0].c)).toBe(0);
   });
 
   it("returns the existing image when the same picture is uploaded again", async () => {
@@ -209,8 +210,8 @@ describe("storing images", () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.image.storage).toBe("r2");
-    expect(r.image.url).toMatch(/^https:\/\/image\.vierapparatus\.com\/modules\/\d{4}\/\d{2}\/i_[A-Za-z0-9_-]+\.webp$/);
-    expect(r.image.thumbUrl).toMatch(/^https:\/\/image\.vierapparatus\.com\/thumbnails\/modules\/\d{4}\/\d{2}\/i_[A-Za-z0-9_-]+\.webp$/);
+    expect(r.image.url).toMatch(/^https:\/\/images\.vierapparatus\.com\/modules\/\d{4}\/\d{2}\/i_[A-Za-z0-9_-]+\.webp$/);
+    expect(r.image.thumbUrl).toMatch(/^https:\/\/images\.vierapparatus\.com\/thumbnails\/modules\/\d{4}\/\d{2}\/i_[A-Za-z0-9_-]+\.webp$/);
     expect(bucket.puts).toHaveLength(2);
     expect(bucket.puts[0].type).toBe("image/webp");
     expect(bucket.puts[0].cache).toContain("immutable");
@@ -238,6 +239,7 @@ describe("storing images", () => {
   });
 
   it("signs uploads to R2's S3 API when only credentials are configured", async () => {
+    bindBucket(null); // the Worker binding would take precedence over the keys
     process.env.R2_ACCOUNT_ID = "acct123";
     process.env.R2_ACCESS_KEY_ID = "AKIDEXAMPLE";
     process.env.R2_SECRET_ACCESS_KEY = "secret-example";
@@ -261,6 +263,7 @@ describe("storing images", () => {
   });
 
   it("reports a refusal from storage without leaving a record", async () => {
+    bindBucket(null);
     process.env.R2_ACCOUNT_ID = "acct123";
     process.env.R2_ACCESS_KEY_ID = "AKIDEXAMPLE";
     process.env.R2_SECRET_ACCESS_KEY = "secret-example";
