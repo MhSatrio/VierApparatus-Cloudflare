@@ -3,12 +3,13 @@ import { ArticleCard, formatDate } from "@/components/ArticleCard";
 import { SafeImage } from "@/components/SafeImage";
 import { brand } from "@/lib/brand";
 import { getFeatured, listPublished } from "@/lib/store/articles";
-import { listCategories } from "@/lib/store/categories";
+import { listCategoriesCached } from "@/lib/store/categories";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [featured, latest, topics] = await Promise.all([getFeatured(), listPublished({ perPage: 7 }), listCategories({ onlyWithArticles: true })]);
+  const [featured, latest, allTopics] = await Promise.all([getFeatured(), listPublished({ perPage: 7 }), listCategoriesCached()]);
+  const topics = allTopics.filter((c) => c.articleCount > 0);
   const rest = latest.items.filter((a) => a.id !== featured?.id).slice(0, 6);
 
   return (

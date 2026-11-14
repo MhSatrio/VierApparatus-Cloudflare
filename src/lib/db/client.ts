@@ -40,7 +40,8 @@ export function conn(): Promise<Client> {
     ready = (async () => {
       const c = await open();
       const { migrate } = await import("./migrations");
-      await migrate(c);
+      // The busy_timeout pragma is for a local SQLite file only; over HTTP it would be a wasted round trip on every cold start.
+      await migrate(c, { pragma: process.env.LOCAL_DB === "1" });
       client = c;
       return c;
     })().catch((e) => {

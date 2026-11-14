@@ -205,12 +205,18 @@ export async function getSubjectWithSpecializations(subjectSlug: string): Promis
 export async function findRedirect(path: string): Promise<string | null> {
   const clean = "/" + path.split("/").filter(Boolean).join("/");
   const parts = clean.split("/").filter(Boolean);
+  // Every candidate prefix, longest first, answered by ONE query. This used to be one query per prefix, so an unknown deep address
+  // (the usual crawler hit) cost up to five sequential round trips before it could answer 404.
+  const prefixes: string[] = [];
+  for (let i = parts.length; i >= 2; i--) prefixes.push("/" + parts.slice(0, i).join("/"));
+  if (!prefixes.length) return null;
   const db = await conn();
-  for (let i = parts.length; i >= 2; i--) {
-    const prefix = "/" + parts.slice(0, i).join("/");
-    const r = (await db.execute({ sql: "SELECT to_path FROM module_redirects WHERE from_path = ?", args: [prefix] })).rows[0];
+  const rows = (await db.execute({ sql: `SELECT from_path, to_path FROM module_redirects WHERE from_path IN (${prefixes.map(() => "?").join(",")})`, args: prefixes })).rows;
+  for (const prefix of prefixes) {
+    const r = rows.find((x) => s(x.from_path) === prefix);
     if (r) {
-      const to = s(r.to_path) + (i < parts.length ? "/" + parts.slice(i).join("/") : "");
+      const rest = parts.slice(prefix.split("/").filter(Boolean).length);
+      const to = s(r.to_path) + (rest.length ? "/" + rest.join("/") : "");
       return to === clean ? null : to;
     }
   }
@@ -262,8 +268,9 @@ export type ModulePage = {
 };
 
 /** A module or chapter as a reader sees it, or null unless it is published (a draft has no public address). */
-export async function getModulePage(subjectSlug: string, specSlug: string, levelSlug: string, trail: string[]): Promise<ModulePage | null> {
-  const tree = await getSubjectTree(subjectSlug, specSlug);
+export async function getModulePage(subjectSlug: string, specSlug: string, levelSlug: string, trail: string[], opts: { tree?: SubjectTree | null } = {}): Promise<ModulePage | null> {
+  // A caller that already holds the (possibly briefly cached) tree passes it in and skips three round trips.
+  const tree = "tree" in opts ? opts.tree : await getSubjectTree(subjectSlug, specSlug);
   if (!tree) return null;
   const found = findNode(tree, levelSlug, trail);
   if (!found || !found.node.readable) return null;

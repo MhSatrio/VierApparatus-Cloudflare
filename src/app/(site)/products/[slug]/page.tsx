@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -15,8 +16,11 @@ export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ slug: string }> };
 
+/** generateMetadata and the page both need the product: one database read per request instead of two. */
+const loadProduct = cache((slug: string) => getPublishedProduct(slug));
+
 export async function generateMetadata({ params }: Ctx): Promise<Metadata> {
-  const p = await getPublishedProduct((await params).slug);
+  const p = await loadProduct((await params).slug);
   if (!p) return { robots: { index: false } };
   return {
     title: { absolute: productTitle(p) },
@@ -65,15 +69,16 @@ const List = ({ items }: { items: string[] }) => (
 
 export default async function ProductPage({ params }: Ctx) {
   const { slug } = await params;
-  const p: ProductRecord | null = await getPublishedProduct(slug);
+  const p: ProductRecord | null = await loadProduct(slug);
   if (!p) {
     const now = await findProductRedirect(slug);
     if (now) permanentRedirect(productHref(now));
     notFound();
   }
-  const [comments, related, ratings] = await Promise.all([listApprovedComments(p.id), getRelatedProducts(p), ratingFor([p.id])]);
-  const rating = ratings.get(p.id) ?? null;
-  const relatedRatings = await ratingFor(related.map((r) => r.id));
+  const [comments, related] = await Promise.all([listApprovedComments(p.id), getRelatedProducts(p)]);
+  // One ratings query for this product and its related ones (it used to be two).
+  const relatedRatings = await ratingFor([p.id, ...related.map((r) => r.id)]);
+  const rating = relatedRatings.get(p.id) ?? null;
   const main: GalleryImage[] = p.imageUrl ? [{ url: p.imageUrl, thumbUrl: p.thumbUrl || p.imageUrl, alt: p.name, kind: "image" }] : [];
   const images: GalleryImage[] = [...main, ...p.gallery];
   const hasAssessment = p.advantages.length > 0 || p.limitations.length > 0;

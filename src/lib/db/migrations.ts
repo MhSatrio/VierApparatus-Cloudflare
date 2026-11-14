@@ -758,11 +758,17 @@ async function readVersion(db: Pick<Client, "execute">): Promise<number> {
  * finds the migration already applied does nothing. Without this, two processes could both run the same ALTER TABLE and the
  * second would fail with "duplicate column name".
  */
-export async function migrate(db: Client): Promise<void> {
-  // A local SQLite file: wait for another connection's write instead of failing at once. Turso (HTTP) does not take this pragma.
-  await db.execute("PRAGMA busy_timeout = 15000").catch(() => {});
+export async function migrate(db: Client, opts: { pragma?: boolean } = {}): Promise<void> {
+  // A local SQLite file: wait for another connection's write instead of failing at once. Turso (HTTP) does not take this pragma,
+  // and trying it there would cost a wasted round trip on every cold start, so the remote client passes { pragma: false }.
+  if (opts.pragma !== false) await db.execute("PRAGMA busy_timeout = 15000").catch(() => {});
+  const latest = MIGRATIONS[MIGRATIONS.length - 1].version;
+  // The normal case (schema already current) is ONE read. Every cold Worker instance runs this, and each round trip to Turso is
+  // about 300 ms, so the old create-meta + read sequence is not repeated. The meta table is only created on a brand new database.
+  const current = await readVersion(db).catch(() => null);
+  if (current !== null && current >= latest) return;
   await db.execute(META);
-  if ((await readVersion(db)) >= MIGRATIONS[MIGRATIONS.length - 1].version) return;
+  if ((await readVersion(db)) >= latest) return;
   for (const m of MIGRATIONS) await applyMigration(db, m);
 }
 

@@ -1,4 +1,5 @@
 import { conn } from "../db/client";
+import { ttlMemo } from "../memo";
 import { s } from "./util";
 
 /**
@@ -42,4 +43,11 @@ export async function setPopupSettings(v: PopupSettings): Promise<void> {
     ],
     "write",
   );
+  getPopupSettingsCached.clear();
 }
+
+/**
+ * The public layout reads the popup settings on EVERY page render. Kept for 60 seconds per server instance (the page cache window
+ * is longer), so a page render no longer costs this round trip. The admin save above clears it on the instance that handled it.
+ */
+export const getPopupSettingsCached = ttlMemo(getPopupSettings, { ttlMs: 60_000, max: 1 });

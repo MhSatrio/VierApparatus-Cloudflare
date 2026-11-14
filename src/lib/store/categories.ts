@@ -1,4 +1,5 @@
 import { conn } from "../db/client";
+import { ttlMemo } from "../memo";
 import { newId } from "../crypto";
 import { slugify } from "../content/text";
 import { n, s, type Row } from "./util";
@@ -21,6 +22,12 @@ export async function listCategories(opts: { onlyWithArticles?: boolean } = {}):
   const all = (await db.execute(`${BASE} ORDER BY c.sort, c.name`)).rows.map(toCategory);
   return opts.onlyWithArticles ? all.filter((c) => c.articleCount > 0) : all;
 }
+
+/**
+ * The topic list for PUBLIC pages (layout popup, home). It rarely changes and the article counts only need to be roughly current, so
+ * one server instance keeps it for 60 seconds instead of asking Turso on every render. Treat the result as read-only.
+ */
+export const listCategoriesCached = ttlMemo(() => listCategories(), { ttlMs: 60_000, max: 1 });
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   const db = await conn();
@@ -52,6 +59,7 @@ export async function createCategory(name: string, description = ""): Promise<Ca
   const max = Number((await db.execute("SELECT COALESCE(MAX(sort), 0) AS m FROM categories")).rows[0].m);
   const id = newId("cat_");
   await db.execute({ sql: "INSERT INTO categories(id, slug, name, description, sort) VALUES (?, ?, ?, ?, ?)", args: [id, slug, clean, description.trim().slice(0, 400), max + 1] });
+  listCategoriesCached.clear();
   return { ok: true, category: (await getCategoryById(id))! };
 }
 
@@ -68,6 +76,7 @@ export async function updateCategory(id: string, patch: { name?: string; descrip
     sql: "UPDATE categories SET name = ?, description = ?, sort = ? WHERE id = ?",
     args: [name, (patch.description ?? cur.description).trim().slice(0, 400), patch.sort ?? cur.sort, id],
   });
+  listCategoriesCached.clear();
   return { ok: true, category: (await getCategoryById(id))! };
 }
 
@@ -77,5 +86,6 @@ export async function deleteCategory(id: string): Promise<{ ok: true } | { ok: f
   const used = Number((await db.execute({ sql: "SELECT COUNT(*) AS c FROM articles WHERE category_id = ?", args: [id] })).rows[0].c);
   if (used > 0) return { ok: false, error: `${used} article${used === 1 ? " uses" : "s use"} this topic. Move ${used === 1 ? "it" : "them"} to another topic first.` };
   const r = await db.execute({ sql: "DELETE FROM categories WHERE id = ?", args: [id] });
+  listCategoriesCached.clear();
   return r.rowsAffected > 0 ? { ok: true } : { ok: false, error: "Topic not found." };
 }

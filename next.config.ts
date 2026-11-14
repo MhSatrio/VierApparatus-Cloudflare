@@ -52,6 +52,7 @@ const securityHeaders = [
  * (the Cloudflare deployment uses the same window).
  */
 const publicCache = "public, max-age=0, s-maxage=300, stale-while-revalidate=86400";
+const lessonCache = "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -95,6 +96,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       ...pages.map((source) => ({ source, headers: [{ key: "Cache-Control", value: publicCache }] })),
+      // Lessons change rarely and are the heaviest pages to render, so they get a longer shared-cache window (1 hour; the Cloudflare
+      // Worker applies the same value in src/lib/edge/policy.ts, which wins there because it sets the header on the cached copy).
+      ...["/module", "/module/:path*"].map((source) => ({ source, headers: [{ key: "Cache-Control", value: lessonCache }] })),
       { source: "/api/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
       { source: "/admin/:path*", headers: [{ key: "Cache-Control", value: "no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }] },
     ];

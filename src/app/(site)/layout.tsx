@@ -5,12 +5,15 @@ import { Tracker } from "@/components/Tracker";
 import { AdsenseScript } from "@/components/AdsenseScript";
 import { NewsletterPopup } from "@/components/newsletter/NewsletterPopup";
 import { site } from "@/lib/site";
-import { listCategories } from "@/lib/store/categories";
-import { getPopupSettings } from "@/lib/store/newsletter-settings";
+import { listCategoriesCached } from "@/lib/store/categories";
+import { getPopupSettingsCached } from "@/lib/store/newsletter-settings";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  // The popup is off unless the owner has switched it on; its topic list comes from the same topics as the articles.
-  const [popup, topics] = await Promise.all([getPopupSettings(), listCategories()]);
+  // The popup is off unless the owner has switched it on; its topic list comes from the same topics as the articles. Both reads are
+  // kept for a minute per server instance, and the topic list is only fetched when the popup is on, so a normal render makes no
+  // database call here at all (it used to make two on every page).
+  const popup = await getPopupSettingsCached();
+  const topics = popup.enabled ? await listCategoriesCached() : [];
   return (
     <>
       <a
